@@ -9,6 +9,8 @@ export interface RunRequest {
   cwd?: string;
   /** Builder sessions may edit files in their worktree. Everyone else is read-only. */
   allowEdits?: boolean;
+  /** Tools the session may use without asking (from the fleet's allowlist file). */
+  allowedTools?: string[];
 }
 
 export interface RunResult {
@@ -44,6 +46,7 @@ export class ClaudeCodeRuntime implements Runtime {
     const args = [this.command, "-p", req.prompt, "--output-format", "json"];
     if (this.model) args.push("--model", this.model);
     args.push("--permission-mode", req.allowEdits ? "acceptEdits" : "default");
+    if (req.allowedTools?.length) args.push("--allowedTools", req.allowedTools.join(","));
     let proc;
     try {
       proc = Bun.spawn(args, { cwd: req.cwd, stdout: "pipe", stderr: "pipe", stdin: "ignore" });

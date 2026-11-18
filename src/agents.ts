@@ -16,11 +16,14 @@ export interface GateVerdict {
 }
 
 export interface InvestigateVerdict {
-  action: "reply" | "build" | "wait" | "done";
+  action: "reply" | "build" | "wait" | "done" | "grant_tool";
   reply?: string;
   plan?: string;
   waiting_on?: string;
   waiting_kind?: "person" | "pr";
+  /** For grant_tool: a Claude Code tool spec such as Bash(npm run lint:*), and which role needs it. */
+  tool?: string;
+  tool_role?: string;
 }
 
 export interface BuildVerdict {
@@ -82,8 +85,9 @@ End with one JSON object: {"needs_human": true|false, "reason": "<one of the rea
   investigator: (c: Card, decisions: string, claims: string) => `You are the investigator of a Pororoca fleet. Find out what is really being asked and what resolves it.
 Read the code and history you need. Do not change anything.
 ${decisions ? `Past decisions of the human for this repo (follow them):\n${decisions}\n` : ""}${claims ? `Work already in flight on this repo (do not duplicate it; if a PR already solves this, reply pointing to it):\n${claims}\n` : ""}${card(c)}
+If the request is to let the fleet use a tool it lacks (for example running the linter), use action grant_tool with the narrowest spec.
 End with one JSON object:
-{"action": "reply|build|wait|done", "reply": "<message to send, if any>", "plan": "<what to build, if build>", "waiting_on": "<person or PR, if wait>", "waiting_kind": "person|pr"}`,
+{"action": "reply|build|wait|done|grant_tool", "tool": "<spec, if grant_tool>", "tool_role": "<builder|investigator|all>", "reply": "<message to send, if any>", "plan": "<what to build, if build>", "waiting_on": "<person or PR, if wait>", "waiting_kind": "person|pr"}`,
 
   builder: (c: Card, plan: string, decisions: string) => `You are the builder of a Pororoca fleet, working in a fresh git worktree of ${c.repo}.
 Make the smallest change that resolves the card, with tests when the repo has them. Do not commit, push or open the PR: the fleet does that.
@@ -92,9 +96,10 @@ ${decisions ? `Past decisions of the human for this repo:\n${decisions}\n` : ""}
 Plan from the investigator:\n${plan}
 End with one JSON object: {"summary": "<what changed>"} or {"already_done": "<PR url>"} or {"not_code": "<why this is not a code change>"}`,
 
-  judge: (c: Card, what: string) => `You are the judge of a Pororoca fleet. A sensitive action needs your approval before it happens.
+  judge: (c: Card, what: string, evidence = "") => `You are the judge of a Pororoca fleet. A sensitive action needs your approval before it happens.
 ${card(c)}
 Action: ${what}
+${evidence ? `Evidence (the full change, as text; you don't need tools to read it):\n${evidence}\n` : ""}
 Approve only if it is correct, reversible or clearly intended by the requester, and safe.
 End with one JSON object: {"approve": true|false, "why": "<one line>"}`,
 };

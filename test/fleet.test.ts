@@ -323,3 +323,113 @@ describe("demo", () => {
     expect(lines.join("\n")).toContain("needs you (money)");
   });
 });
+
+class LandingForge extends StubForge {
+  ci: "pass" | "fail" | "pending" | "none" = "pending";
+  merged: string[] = [];
+  async checks() {
+    return this.ci;
+  }
+  async merge(url: string) {
+    this.merged.push(url);
+    this.state = "merged";
+    return { ok: true };
+  }
+}
+
+describe("landing the PR", () => {
+  const build: Answers = { ...happy, investigator: j({ action: "build", plan: "fix it" }), judge: j({ approve: true, why: "ok" }) };
+
+  test("waits while CI is pending, merges when green (merge: judge)", async () => {
+    const forge = new LandingForge();
+    const { store, fleet } = setup(build, () => {}, forge);
+    const c = store.add({ source: "inbox", title: "bug", repo: "a/b" })!;
+    await fleet.drain();
+    await fleet.chase();
+    expect(store.get(c.id)!.state).toBe("waiting");
+    forge.ci = "pass";
+    await fleet.chase();
+    expect(forge.merged).toEqual(["https://example/pr/1"]);
+    expect(store.get(c.id)!.state).toBe("done");
+  });
+
+  test("red CI goes back to the builder, three times then repair", async () => {
+    const forge = new LandingForge();
+    forge.ci = "fail";
+    const { store, fleet } = setup(build, () => {}, forge);
+    const c = store.add({ source: "inbox", title: "bug", repo: "a/b" })!;
+    await fleet.drain();
+    await fleet.chase();
+    expect(store.get(c.id)!.state).toBe("building");
+    expect(store.get(c.id)!.draft).toContain("failed CI");
+    for (let i = 0; i < 2; i++) {
+      await fleet.drain();
+      await fleet.chase();
+    }
+    expect(store.get(c.id)!.state).toBe("repair");
+    expect(forge.merged).toEqual([]);
+  });
+
+  test("merge: propose hands the green PR to the human, who merges it", async () => {
+    const forge = new LandingForge();
+    forge.ci = "pass";
+    const { store, fleet } = setup(build, (m) => (m["x-maloca"].autonomy.merge = "propose"), forge);
+    const c = store.add({ source: "inbox", title: "bug", repo: "a/b" })!;
+    await fleet.drain();
+    await fleet.chase();
+    expect(store.get(c.id)!.state).toBe("you");
+    await fleet.humanMerge(c.id);
+    expect(store.get(c.id)!.state).toBe("done");
+  });
+
+  test("shadow mode never merges", async () => {
+    const forge = new LandingForge();
+    forge.ci = "pass";
+    const { store, fleet } = setup(build, (m) => (m["x-maloca"].shadow = { enabled: true }), forge);
+    const c = store.add({ source: "inbox", title: "bug", repo: "a/b" })!;
+    await fleet.drain();
+    await fleet.chase();
+    expect(forge.merged).toEqual([]);
+    expect(store.events(c.id).map((e) => e.kind)).toContain("would_merge");
+  });
+});
+
+describe("fleet-editable allowlist", () => {
+  test("a grant approved by the judge lands in the file and reaches the runtime", async () => {
+    const { store, fleet, dir, runtime } = setup({
+      ...happy,
+      investigator: j({ action: "grant_tool", tool: "Bash(npm run lint:*)", tool_role: "builder" }),
+      judge: j({ approve: true, why: "read-only lint" }),
+    });
+    const c = store.add({ source: "inbox", title: "let the builder run the linter" })!;
+    await fleet.drain();
+    expect(store.get(c.id)!.state).toBe("done");
+    const file = JSON.parse(readFileSync(join(dir, "allowlist.json"), "utf8"));
+    expect(file.builder).toContain("Bash(npm run lint:*)");
+    expect(runtime.calls[0]!.allowedTools).toContain("Read");
+  });
+
+  test("the judge can reject; dangerous specs never reach the judge", async () => {
+    const r1 = setup({ ...happy, investigator: j({ action: "grant_tool", tool: "Bash(make:*)" }), judge: j({ approve: false, why: "too broad" }) });
+    const c1 = r1.store.add({ source: "inbox", title: "x" })!;
+    await r1.fleet.drain();
+    expect(r1.store.get(c1.id)!.state).toBe("you");
+
+    const r2 = setup({ ...happy, investigator: j({ action: "grant_tool", tool: "Bash(curl:*)" }), judge: j({ approve: true, why: "?" }) });
+    const c2 = r2.store.add({ source: "inbox", title: "y" })!;
+    await r2.fleet.drain();
+    expect(r2.store.get(c2.id)!.reason).toContain("refused");
+    expect(r2.runtime.calls.some((c) => c.role === "judge")).toBe(false);
+  });
+});
+
+test("the judge gets the PR diff as evidence", async () => {
+  const forge = new LandingForge();
+  forge.ci = "pass";
+  (forge as any).diff = async () => "+ return /plus/.test(x)";
+  const { store, fleet, runtime } = setup({ ...happy, investigator: j({ action: "build", plan: "p" }), judge: j({ approve: true, why: "ok" }) }, () => {}, forge);
+  store.add({ source: "inbox", title: "bug", repo: "a/b" });
+  await fleet.drain();
+  await fleet.chase();
+  expect(runtime.calls.find((c) => c.role === "judge")!.prompt).toContain("+ return /plus/.test(x)");
+});

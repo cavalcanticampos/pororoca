@@ -80,6 +80,8 @@ export class Store {
 
   add(c: { source: string; title: string; body?: string; ext_id?: string | null; repo?: string | null }): Card | null {
     const at = this.ts();
+    // check first: INSERT OR IGNORE still burns AUTOINCREMENT ids, which leaves gaps in card numbers
+    if (c.ext_id && this.db.query("SELECT 1 FROM cards WHERE source = ? AND ext_id = ?").get(c.source, c.ext_id)) return null;
     const r = this.db
       .query(
         `INSERT OR IGNORE INTO cards (source, ext_id, repo, title, body, created_at, updated_at)

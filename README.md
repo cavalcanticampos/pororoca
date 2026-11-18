@@ -34,7 +34,7 @@ The market splits in two. Personal assistants triage and reply, but don't build.
 
 ## Status
 
-**Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is in progress. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
+**Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is done: a fleet takes a labelled GitHub issue to a merged PR on its own. M2 (Slack, shadow report) is next. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
 
 ## Try it
 
@@ -67,7 +67,8 @@ Shadow mode proposes and sends nothing. `pororoca outbox` shows what the fleet w
 | `demo [--fast]` | Fake inbox, scripted runtime |
 | `up [--once]` · `down` · `status` | Run the fleet |
 | `inbox add <text>` | Local inbox |
-| `you` · `show N` · `send N` · `edit N <text>` · `decide N <text>` · `ignore N` · `later N` | Your lane |
+| `you` · `show N` · `send N` · `edit N <text>` · `decide N <text>` · `merge N` · `ignore N` · `later N` | Your lane |
+| `allowlist` | Tools each agent may use; the fleet adds narrow ones, the judge approves |
 | `claim <repo> -- <reason>` | "Someone is on it": the fleet won't build there |
 | `maloca check` · `maloca export --openrig` | Holes in the chase, paths around the gatekeeper; plain OpenRig rig.yaml |
 | `metrics [--json]` | Resolved without you, corrections, cost per card |
