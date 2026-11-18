@@ -29,7 +29,7 @@ It also failed in a way the framework must prevent. Top-priority items were mark
 
 1. **Anyone can run it.** A developer with a GitHub account and a Claude Code subscription has a working solo fleet in under 30 minutes, without Slack.
 2. **Declared, not coded.** The team, the schedules, who chases whom, the autonomy levels and the escalation path all live in `maloca.yaml`.
-3. **Safe by default.** The fleet starts in shadow mode and earns autonomy with evidence.
+3. **Safe by default.** Every level starts at `propose` (the fleet drafts, you approve) and is raised with evidence: the share of drafts you approved unchanged.
 4. **One metric.** `pororoca metrics` reports the share of work resolved without the human.
 
 ### Not in v0.1
@@ -109,7 +109,7 @@ Onboarding is part of M1, not a later milestone: if a stranger can't see the fle
 1. Asks for the mode (solo or team) and who the human is.
 2. Connects GitHub, the conversation adapter (optional) and the tracker.
 3. Writes a **starter maloca with 6 agents**: gatekeeper, triage, investigator, builder, deliverer and chaser.
-4. Starts in **shadow mode**: the fleet proposes but sends nothing. After N days it shows how much it would have resolved without you, and offers to switch on each autonomy level.
+4. Starts with every reply at **propose**: the fleet drafts and you approve with `send N`. `pororoca metrics` counts the drafts you approved unchanged, which is the evidence for raising a level to `auto`.
 5. Offers **presets** so the first file is already close to right: `solo-dev` (GitHub only), `tech-lead` (GitHub plus chat, chasing on) and `founder` (chat first, building off). `--yes` accepts the defaults for scripts.
 
 ### 7.3 CLI
@@ -165,9 +165,9 @@ The reference fleet learned these the hard way. Each one is generic (no company 
 | # | Delivers | Done when |
 |---|---|---|
 | M1 | Core, `maloca.yaml`, CLI, local inbox, GitHub forge and issues, `doctor`, `init` with presets, `demo`, and the M1 patterns of §7.6 | `pororoca demo` runs on a clean machine, and a solo fleet fixes a real GitHub issue end to end, from the terminal only |
-| M2 | Slack adapter and shadow mode | A week in shadow mode produces the "would have resolved without you" report |
-| M3 | Onboarding measured: install script, `init` connecting each adapter, docs | A new user reaches M1 in under 30 minutes, measured with 3 people |
-| M4 | Jirau plugin | The pane shows the lane and the priorities, with real states |
+| M2 | A good install (release binaries, `curl | sh`, `init` that connects GitHub and Slack) and the Slack adapter | A clean machine goes from the install line to a fleet answering a Slack message in under 15 minutes |
+| M3 | Jirau plugin | The pane shows the lane and the priorities, with real states, and acting on a card from the pane works |
+| M4 | Onboarding measured with real people | A new user reaches a working fleet in under 30 minutes, measured with 3 people |
 | M5 | Jira and Linear adapters, team mode | Two humans share one maloca |
 
 The private fleet this came from migrates onto the core along the way and stays the first user.
@@ -182,7 +182,7 @@ The private fleet this came from migrates onto the core along the way and stays 
 
 ## 10. Risks
 
-1. **Speaking for someone is socially risky.** One public mistake can kill adoption. Mitigations are shadow mode, autonomy earned per level, the 🤖 signature and the embarrassment metric.
+1. **Speaking for someone is socially risky.** One public mistake can kill adoption. Mitigations are autonomy levels that start at propose and are raised with evidence, the 🤖 signature and the embarrassment metric.
 2. **Platforms ship "personal agents"** (Slack, Microsoft, Asana). The difference is that Pororoca builds and chases, it is open and self-hosted, and its policy is declarative.
 3. **Built too much around one person.** The pattern sells (autonomy levels, chaser and the metric), not the original code. The core stays small and the specifics go into adapters.
 4. **Terms of service** for acting as a user on chat platforms. Each adapter documents this, and a bot identity is supported as an alternative.
@@ -210,6 +210,7 @@ The private fleet this came from migrates onto the core along the way and stays 
   - **Agent runtime:** follows OpenRig's harness and runner contract, and its conformance check is our test.
 - **OpenRig's Slack app is bot-only** and "never answers as the person". Replying as the human is therefore both Pororoca's difference and its main risk (see §10.1 and §10.4).
 
+- **No shadow mode** (2026-11-18). The `propose` level already keeps every reply behind the human's OK, and the reference fleet never needed a second lock. The evidence for raising a level is the share of drafts approved unchanged. Focus is the basics done well: install, the main integrations and the Jirau cockpit.
 - **Onboarding moves into M1** (2026-11-18). `doctor`, `init` with presets and `demo` ship with the core, because the first thing a stranger needs is to see the fleet work. M3 keeps the measured goal (30 minutes, 3 people).
 
 ## 12. Open questions

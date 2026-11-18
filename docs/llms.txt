@@ -7,7 +7,7 @@
 - [maloca.yaml](https://cavalcanticampos.github.io/pororoca/spec/maloca.html): the team file, annotated key by key, and its compatibility with OpenRig
 - [Adapter contracts](https://cavalcanticampos.github.io/pororoca/spec/adapters.html): the TypeScript ports
 - [Integrations](https://cavalcanticampos.github.io/pororoca/integrations.html): the connector matrix
-- [Safety](https://cavalcanticampos.github.io/pororoca/safety.html): shadow mode, autonomy, signature, embarrassment metric
+- [Safety](https://cavalcanticampos.github.io/pororoca/safety.html): autonomy levels, signature, embarrassment metric
 - [Roadmap](https://cavalcanticampos.github.io/pororoca/roadmap.html): milestones M1 to M5 and the patterns from the reference fleet
 - [Tour](https://cavalcanticampos.github.io/pororoca/tour.html): four scenes of a fleet at work
 - [PRD](https://github.com/cavalcanticampos/pororoca/blob/main/docs/PRD.md)

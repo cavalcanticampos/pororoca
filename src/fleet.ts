@@ -46,11 +46,6 @@ export class Fleet {
   private log(line: string, card?: Card) {
     this.o.log?.(line, card);
   }
-  get shadow(): boolean {
-    const forced = this.store.getMeta("shadow");
-    if (forced !== null) return forced === "on";
-    return this.x.shadow?.enabled ?? true;
-  }
 
   // ---------- pause (pattern: weekly-limit pause) ----------
 
@@ -304,11 +299,7 @@ export class Fleet {
     const level: Level = this.x.autonomy.reply;
     const draft = card.draft ?? "";
     if (draft && level !== "off") {
-      if (this.shadow) {
-        this.store.event(card.id, "would_send", draft);
-        this.store.patch(card.id, { shadow: 1 });
-        this.log(`#${card.id} ${this.name("deliverer")}: (shadow) would send: ${draft.slice(0, 90)}`, card);
-      } else if (level === "auto" || (level === "judge" && (await this.judge(card, `send this reply: ${draft}`)))) {
+      if (level === "auto" || (level === "judge" && (await this.judge(card, `send this reply: ${draft}`)))) {
         await this.send(card, draft);
         this.log(`#${card.id} ${this.name("deliverer")}: sent 🤖`, card);
       } else {
@@ -360,9 +351,8 @@ export class Fleet {
       const chases = card.chases + 1;
       const text = `Following up: this is still waiting on ${card.waiting_on}. ${card.title}`;
       const level = this.x.autonomy.chase_people;
-      const live = card.waiting_kind === "person" && !this.shadow && (level === "auto" || level === "judge");
-      if (live) await this.send(card, text);
-      else this.store.event(card.id, "would_chase", text);
+      // chasing people out loud only when chase_people allows it; otherwise the chaser still tracks and escalates
+      if (card.waiting_kind === "person" && (level === "auto" || level === "judge")) await this.send(card, text);
       this.store.patch(card.id, { chases, last_chase: this.now().toISOString() });
       this.store.event(card.id, "chase", `${chases}/${rule.max}`);
       // pattern: after max rounds the card shows up for the human, and chasing continues
@@ -401,10 +391,6 @@ export class Fleet {
         this.store.move(card.id, "you", `PR green${ci === "none" ? " (no CI)" : ""}, waiting for your merge`);
         return true;
       }
-      return false;
-    }
-    if (this.shadow) {
-      if (!this.store.events(card.id).some((e) => e.kind === "would_merge")) this.store.event(card.id, "would_merge", card.pr_url);
       return false;
     }
     if (level === "judge" && !(await this.judge(card, `merge ${card.pr_url} (CI: ${ci})`))) {

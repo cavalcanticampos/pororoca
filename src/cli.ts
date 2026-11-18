@@ -59,14 +59,13 @@ const HELP = `pororoca ${VERSION}: a fleet of agents that works for you
 Setup
   doctor [--watch]                 check everything the fleet needs (and keep watching)
   init [--preset solo-dev|tech-lead|founder] [--yes] [--repos a/b,c/d]
-                                   write maloca.yaml (starts in shadow mode)
+                                   write maloca.yaml (replies wait for your OK)
   demo [--fast]                    watch a fleet work a fake inbox, no accounts needed
 
 Fleet
   up [--once] [--interval 60]      run the fleet (foreground; --once drains and exits)
   down                             stop a running fleet
-  status [--json]                  states, pause, shadow
-  shadow on|off                    shadow mode: propose only, send nothing
+  status [--json]                  states and pause
 
 Cards
   inbox add <text> [--repo a/b]    put work in the local inbox
@@ -78,7 +77,7 @@ Cards
   merge N                          merge the card's green PR yourself
   ignore N | later N
   allowlist                        tools each agent may use (the fleet edits it, the judge approves)
-  outbox [--json]                  what was sent, or would have been in shadow mode
+  outbox [--json]                  what the fleet sent
   claim <repo> [--area x] [--hours 4] -- <reason>
                                    "someone is on it": the fleet won't build there
 
@@ -145,7 +144,7 @@ async function cmdInit(flags: Flags) {
   const repos = reposRaw.split(",").map((s) => s.trim()).filter(Boolean);
   const m = presetMaloca(preset, { id: "me", name, ...(github ? { github } : {}) }, repos, String(flags["fleet-name"] ?? "my-fleet"));
   writeFileSync(malocaPath, malocaToYaml(m));
-  out(`\nWrote ${malocaPath} (${preset}). Shadow mode is on: the fleet proposes and sends nothing until you run \`pororoca shadow off\`.`);
+  out(`\nWrote ${malocaPath} (${preset}). Replies start at "propose": each one waits for your OK in \`pororoca you\`. Raise autonomy.reply to auto when you trust it.`);
   if (repos.length) out(`The fleet works open issues labelled "${m["x-maloca"].github!.label}" in ${repos.join(", ")}.`);
   out(`\nNext:\n  pororoca doctor\n  pororoca inbox add "something you'd like off your plate"\n  pororoca up --once\n  pororoca you`);
 }
@@ -181,7 +180,7 @@ async function cmdDoctor(flags: Flags) {
 async function cmdUp(flags: Flags) {
   const { fleet, store, maloca, stateDir } = openFleet(flags, out);
   const x = maloca["x-maloca"];
-  out(`🌊 ${maloca.name}: ${Object.keys(x.agents).length} agents${fleet.shadow ? ", shadow mode (nothing is sent)" : ""}`);
+  out(`🌊 ${maloca.name}: ${Object.keys(x.agents).length} agents`);
   if (flags.once) {
     await fleet.drain();
     await fleet.chase();
@@ -244,9 +243,9 @@ function cmdStatus(flags: Flags) {
     } catch {}
   }
   const paused = fleet.pausedUntil();
-  const s = { running, shadow: fleet.shadow, pausedUntil: paused?.toISOString() ?? null, cards: counts, lane: humanLane(store).length };
+  const s = { running, pausedUntil: paused?.toISOString() ?? null, cards: counts, lane: humanLane(store).length };
   if (flags.json) return asJson(s);
-  out(`fleet: ${running ? "running" : "stopped"}${s.shadow ? " · shadow mode" : ""}${paused ? ` · paused until ${s.pausedUntil}` : ""}`);
+  out(`fleet: ${running ? "running" : "stopped"}${paused ? ` · paused until ${s.pausedUntil}` : ""}`);
   out(`your lane: ${s.lane}`);
   const order: CardState[] = ["new", "gatekeeper", "investigating", "building", "delivering", "waiting", "you", "repair", "later", "done", "ignored"];
   for (const st of order) if (counts[st]) out(`  ${st.padEnd(14)} ${counts[st]}`);
@@ -280,12 +279,6 @@ export async function main(argv: string[]): Promise<void> {
       return cmdDown(flags);
     case "status":
       return cmdStatus(flags);
-    case "shadow": {
-      const { store } = openFleet(flags);
-      if (sub !== "on" && sub !== "off") throw new Error("usage: pororoca shadow on|off");
-      store.setMeta("shadow", sub);
-      return out(sub === "on" ? "Shadow mode on: the fleet proposes and sends nothing." : "Shadow mode off: autonomy levels in maloca.yaml now apply.");
-    }
     case "inbox": {
       if (sub !== "add") throw new Error("usage: pororoca inbox add <text>");
       const text = [...more, rest].filter(Boolean).join(" ").trim();
@@ -350,10 +343,10 @@ export async function main(argv: string[]): Promise<void> {
     }
     case "outbox": {
       const { store } = openFleet(flags);
-      const sent = store.events().filter((e) => e.kind === "sent" || e.kind === "would_send" || e.kind === "would_chase");
+      const sent = store.events().filter((e) => e.kind === "sent");
       if (flags.json) return asJson(sent);
       if (!sent.length) return out("Outbox is empty.");
-      for (const e of sent) out(`#${e.card_id} ${e.kind === "sent" ? "🤖 sent" : `(${e.kind.replace("_", " ")})`}: ${e.detail?.split("\n")[0]}`);
+      for (const e of sent) out(`#${e.card_id} 🤖 ${e.detail?.split("\n")[0]}`);
       return;
     }
     case "claim": {
@@ -382,8 +375,8 @@ export async function main(argv: string[]): Promise<void> {
       throw new Error("usage: pororoca maloca check | maloca export --openrig");
     }
     case "metrics": {
-      const { store, fleet } = openFleet(flags);
-      const m = metrics(store, Number(flags.days ?? 7), fleet.shadow);
+      const { store } = openFleet(flags);
+      const m = metrics(store, Number(flags.days ?? 7));
       return flags.json ? asJson(m) : out(formatMetrics(m));
     }
     default:

@@ -37,7 +37,6 @@ function setup(answers: Answers, tweak: (m: Maloca) => void = () => {}, forge: S
   const dir = mkdtempSync(join(tmpdir(), "pororoca-test-"));
   const store = new Store(dir, () => clock);
   const maloca = presetMaloca("tech-lead", { id: "me" }, ["a/b"]);
-  maloca["x-maloca"].shadow = { enabled: false };
   maloca["x-maloca"].autonomy.reply = "auto";
   tweak(maloca);
   const runtime = new FakeRuntime((req) => {
@@ -69,16 +68,6 @@ describe("pipeline", () => {
     expect(metrics(store).resolvedWithoutYou).toBe(1);
   });
 
-  test("shadow mode sends nothing and records what it would send", async () => {
-    const { store, fleet } = setup(happy, (m) => (m["x-maloca"].shadow = { enabled: true }));
-    const c = store.add({ source: "inbox", title: "q?" })!;
-    await fleet.drain();
-    const kinds = store.events(c.id).map((e) => e.kind);
-    expect(kinds).toContain("would_send");
-    expect(kinds).not.toContain("sent");
-    expect(store.get(c.id)!.state).toBe("done");
-  });
-
   test("reply level propose puts the draft in the human lane", async () => {
     const { store, fleet } = setup(happy, (m) => (m["x-maloca"].autonomy.reply = "propose"));
     const c = store.add({ source: "inbox", title: "q?" })!;
@@ -86,6 +75,7 @@ describe("pipeline", () => {
     expect(store.get(c.id)!.state).toBe("you");
     await fleet.humanSend(c.id);
     expect(store.get(c.id)!.state).toBe("done");
+    expect(metrics(store).approvedUnchanged).toBe(1);
   });
 
   test("noise is closed by triage", async () => {
@@ -273,13 +263,13 @@ describe("chaser", () => {
     expect(store.events(c.id).filter((e) => e.kind === "sent").length).toBe(5);
   });
 
-  test("with chasing off it only records what it would send", async () => {
+  test("with chasing off it tracks and escalates but sends nothing", async () => {
     const { store, fleet } = setup(wait);
     const c = store.add({ source: "inbox", title: "x" })!;
     await fleet.drain();
     advance(61 * 60_000);
     await fleet.chase();
-    expect(store.events(c.id).map((e) => e.kind)).toContain("would_chase");
+    expect(store.events(c.id).map((e) => e.kind)).toContain("chase");
     expect(store.events(c.id).map((e) => e.kind)).not.toContain("sent");
   });
 });
@@ -382,16 +372,6 @@ describe("landing the PR", () => {
     expect(store.get(c.id)!.state).toBe("done");
   });
 
-  test("shadow mode never merges", async () => {
-    const forge = new LandingForge();
-    forge.ci = "pass";
-    const { store, fleet } = setup(build, (m) => (m["x-maloca"].shadow = { enabled: true }), forge);
-    const c = store.add({ source: "inbox", title: "bug", repo: "a/b" })!;
-    await fleet.drain();
-    await fleet.chase();
-    expect(forge.merged).toEqual([]);
-    expect(store.events(c.id).map((e) => e.kind)).toContain("would_merge");
-  });
 });
 
 describe("fleet-editable allowlist", () => {

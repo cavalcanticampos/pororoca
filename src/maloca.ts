@@ -52,7 +52,6 @@ export interface Autonomy {
 export interface XMaloca {
   mode: Mode;
   humans: Human[];
-  shadow?: { enabled: boolean; days?: number };
   agents: Record<string, AgentDecl>;
   autonomy: Autonomy;
   chase: { waiting_on_person?: ChaseRule; waiting_on_pr?: ChaseRule };
@@ -226,7 +225,6 @@ export function presetMaloca(preset: Preset, human: Human, repos: string[] = [],
     "x-maloca": {
       mode: "solo",
       humans: [human],
-      shadow: { enabled: true, days: 7 },
       agents,
       autonomy,
       chase: {

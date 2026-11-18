@@ -52,7 +52,6 @@ export interface Card {
   chases: number;
   last_chase: string | null;
   escalated: number;
-  shadow: number;
   created_at: string;
   updated_at: string;
 }
