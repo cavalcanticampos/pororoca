@@ -1,6 +1,6 @@
 # PRD: Pororoca v0.1, a fleet that works for one person
 
-Status: draft · Owner: Roberto Campos (@cavalcanticampos) · 2026-11-17
+Status: draft · Owner: Roberto Campos (@cavalcanticampos) · 2026-11-17 · rev. 2026-11-18
 
 ## 1. Problem
 
@@ -96,19 +96,28 @@ An adapter is a small interface: `fetch()`, `reply(card, text, as_human)`, `link
   - **any card state has no chaser** (the "delivered but still waiting" hole);
   - an agent can reach the human lane without going through the gatekeeper.
 
-### 7.2 `pororoca init`
+### 7.2 `pororoca doctor`, `pororoca init` and `pororoca demo`
+
+Onboarding is part of M1, not a later milestone: if a stranger can't see the fleet work in a few minutes, nobody gets to M1's real test.
+
+**`pororoca doctor`** checks what the fleet needs before anything runs: Claude Code installed and logged in, `gh` authenticated, a writable state directory, a valid `maloca.yaml`, and the usage limits of the Claude plan. Each failed check prints the exact command that fixes it. `doctor --watch` keeps running the same checks as watchers (see §7.6).
+
+**`pororoca demo`** runs a full fleet against a fake inbox with three sample requests, with no GitHub, Slack or Claude account. It shows triage, the gatekeeper keeping two of the three away from the human, and the metric at the end. It takes about two minutes.
+
+**`pororoca init`**:
 
 1. Asks for the mode (solo or team) and who the human is.
 2. Connects GitHub, the conversation adapter (optional) and the tracker.
 3. Writes a **starter maloca with 6 agents**: gatekeeper, triage, investigator, builder, deliverer and chaser.
 4. Starts in **shadow mode**: the fleet proposes but sends nothing. After N days it shows how much it would have resolved without you, and offers to switch on each autonomy level.
+5. Offers **presets** so the first file is already close to right: `solo-dev` (GitHub only), `tech-lead` (GitHub plus chat, chasing on) and `founder` (chat first, building off). `--yes` accepts the defaults for scripts.
 
 ### 7.3 CLI
 
-- **Setup:** `init`.
+- **Setup:** `doctor`, `init`, `demo`.
 - **Fleet:** `up`, `down`, `status`.
-- **Cards:** `you` (the human lane), `show N`, `send N`, `edit N <text>`, `ignore N`, `later N`.
-- **Checks:** `maloca check`, `metrics`.
+- **Cards:** `inbox add <text>` (local inbox), `you` (the human lane), `show N`, `send N`, `edit N <text>`, `ignore N`, `later N`.
+- **Checks:** `maloca check`, `maloca export --openrig`, `metrics`.
 - Every read command accepts `--json`, so the Jirau pane and other tools build on the CLI.
 
 ### 7.4 Autonomy and safety defaults
@@ -129,13 +138,35 @@ A Claude Code plugin with a pane beside the chat:
 
 Proposed upstream to OpenRig as an operator cockpit ([openrig#3470](https://github.com/mvschwarz/openrig/issues/3470)). If it isn't accepted there, it ships here.
 
+### 7.6 Patterns from the reference fleet
+
+The reference fleet learned these the hard way. Each one is generic (no company specifics) and each one is a requirement for the core or the starter maloca. The milestone that delivers it is in brackets.
+
+| Pattern | What it does | Why |
+|---|---|---|
+| **Weekly-limit pause** [M1] | When the agent runtime reports a usage limit, the whole fleet pauses, tells the human once and requeues every card. | Without it, every agent fails at once and the human lane fills with fake "needs you" cards. |
+| **Fail-closed gatekeeper** [M1] | If the gatekeeper can't judge a card (error, limit, timeout), the card waits in a "gatekeeper judging" state. It never falls into the human lane by default. | The lane must only hold what truly needs the human. |
+| **Technical-failure retry** [M1] | Git errors, dead sessions and timeouts retry on their own (realign the worktree, up to 3 times), then go to the fleet's own repair queue, not to the human. | Most "stuck" cards were infrastructure, not decisions. |
+| **Work claims** [M1] | Before building, the fleet checks open PRs, recent merges and manual claims ("someone is on it") for the same repo and files. A PR that already solves it turns into a reply; overlap waits. | Avoids duplicate PRs and conflicts with humans. |
+| **Per-repo decision memory** [M1] | Every decision the human makes is distilled into a per-repo file that triage, investigation and build read. | The human shouldn't answer the same question twice. |
+| **Additive-migration judge** [M1] | A new migration that only adds (tables, nullable columns, indexes) is not "sensitive"; destructive ones still go to the judge or the human. | Treating every migration as sensitive sent most PRs to the human. |
+| **Fleet-editable allowlist** [M1] | The runtime's tool allowlist lives in a file the builder can edit, and every change goes through the judge. | The fleet must be able to grant itself a tool the human already asked for, without a human in the loop. |
+| **Human takeover** [M2] | When the human types in a conversation, the fleet steps out of it for 24 hours (renewed on every message). A 🛑 reaction removes the fleet from the thread; 🆕 turns a message into a new card. | Two voices answering the same person is the fastest way to lose trust. |
+| **Promises become tasks** [M2] | A reply that promises something by a time ("I'll send it tomorrow") creates a scheduled card. A watcher flags promises past due. | "Delivered" must never mean "promised". |
+| **Chaser with business hours off** [M2] | The chaser starts after 60 minutes stalled and repeats every 30, any time of day, at most once per person per round; after 4 rounds without progress the card shows up for the human and chasing continues. | Measured median reply to fleet messages was 20 minutes; a 24-hour chaser was far too slow. |
+| **CI sentinel** [M2] | Red CI on the default branches becomes a card on its own, grouped by workflow, ignoring bot noise. | Broken builds are found before someone asks. |
+| **Skill smith** [M4] | A procedure that shows up in 3+ agent reports becomes a reusable skill, reviewed by the judge. | The fleet gets faster at recurring work without prompt tuning. |
+| **Video proof** [M4] | After a UI change reaches staging, an agent records the screen doing the change and attaches the video to the card. | "Done" with proof, not "done" because the PR merged. |
+| **Daily retro** [M2] | A daily autonomous session reads every human correction and every loop of the day, fixes the cause and posts "what I improved today" with before and after. | The fleet should visibly improve itself, not only when the human complains. |
+| **Watchers** [M1] | Small checks that turn a silent failure into a card: spend, disk, stalled routines, permission denials, expiring credentials, lost replies. Shipped as `doctor --watch`. | Silent failures were the main cause of the human finding problems first. |
+
 ## 8. Milestones
 
 | # | Delivers | Done when |
 |---|---|---|
-| M1 | Core, `maloca.yaml`, CLI, local inbox, GitHub forge and issues | A solo fleet fixes a real GitHub issue end to end, from the terminal only |
+| M1 | Core, `maloca.yaml`, CLI, local inbox, GitHub forge and issues, `doctor`, `init` with presets, `demo`, and the M1 patterns of §7.6 | `pororoca demo` runs on a clean machine, and a solo fleet fixes a real GitHub issue end to end, from the terminal only |
 | M2 | Slack adapter and shadow mode | A week in shadow mode produces the "would have resolved without you" report |
-| M3 | `pororoca init` and the starter maloca | A new user reaches M1 in under 30 minutes, measured with 3 people |
+| M3 | Onboarding measured: install script, `init` connecting each adapter, docs | A new user reaches M1 in under 30 minutes, measured with 3 people |
 | M4 | Jirau plugin | The pane shows the lane and the priorities, with real states |
 | M5 | Jira and Linear adapters, team mode | Two humans share one maloca |
 
@@ -145,6 +176,7 @@ The private fleet this came from migrates onto the core along the way and stays 
 
 - **Resolved without you:** the share of incoming items closed without the human. The reference fleet sits at ~93%.
 - **Time to first fleet:** under 30 minutes.
+- **Human corrections:** times per week the human corrected the fleet (edited, retracted or overrode it). It should fall week over week; the daily retro reads from it.
 - **Embarrassment rate:** messages sent on the human's behalf that they later corrected or retracted. Target: under 1%.
 - **Adoption:** 3 people outside the author running a fleet for 2+ weeks.
 
@@ -177,6 +209,8 @@ The private fleet this came from migrates onto the core along the way and stays 
   - **Card states:** mirror OpenRig's queue item states. A card waiting on an outside person is `blocked`, never `done`.
   - **Agent runtime:** follows OpenRig's harness and runner contract, and its conformance check is our test.
 - **OpenRig's Slack app is bot-only** and "never answers as the person". Replying as the human is therefore both Pororoca's difference and its main risk (see §10.1 and §10.4).
+
+- **Onboarding moves into M1** (2026-11-18). `doctor`, `init` with presets and `demo` ship with the core, because the first thing a stranger needs is to see the fleet work. M3 keeps the measured goal (30 minutes, 3 people).
 
 ## 12. Open questions
 
