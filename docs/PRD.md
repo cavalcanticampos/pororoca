@@ -156,8 +156,14 @@ The private fleet this came from migrates onto the core along the way and stays 
 4. **Terms of service** for acting as a user on chat platforms. Each adapter documents this, and a bot identity is supported as an alternative.
 5. **Token cost.** `pororoca metrics` also reports cost per resolved item.
 
-## 11. Open questions
+## 11. Decisions
 
-- Python or TypeScript for the core? The reference fleet is Python, while OpenRig and Claude Code mods are TypeScript.
+- **Language: TypeScript, shipped as one binary with `bun build --compile`** (2026-11-17).
+  - **Footprint isn't the deciding factor.** Each agent is a Claude Code session of about 160 MB, while the whole reference orchestrator uses 28 MB. A Rust or Go core would save roughly 2% of a fleet's memory.
+  - **What decides it:** Anthropic's Agent SDK ships for TypeScript and Python, not Go or Rust. Claude Code mods, including the Jirau cockpit, are TypeScript, and so is OpenRig. Slack (Bolt) and GitHub (Octokit) have official TypeScript libraries.
+  - **Go's main advantage** is a single static binary, and Bun covers that: users install one executable with no Node required.
+
+## 12. Open questions
+
 - Should OpenRig be the scheduler and host, or should Pororoca ship its own daemon and keep OpenRig compatibility?
 - What is the minimum adapter interface that still lets Slack "reply as you" and a CLI inbox share one shape?
