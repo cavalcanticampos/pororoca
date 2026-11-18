@@ -9,6 +9,7 @@ import {
   type TriageVerdict,
 } from "./agents.ts";
 import { SIGNATURE, type Conversation, type Forge } from "./adapters/types.ts";
+import { forbiddenGrant, grantTool, toolsFor } from "./allowlist.ts";
 import { readDecisions, recordDecision } from "./decisions.ts";
 import { agentName, parseDuration, type ChaseRule, type Maloca } from "./maloca.ts";
 import type { RunResult, Runtime } from "./runtime.ts";
@@ -77,8 +78,8 @@ export class Fleet {
   }
 
   /** Runs an agent. Returns null when the card must stay where it is (limit or technical failure). */
-  private async call(card: Card, role: Role, prompt: string): Promise<RunResult | null> {
-    const res = await this.o.runtime.run({ agent: this.agent(role), role, prompt });
+  private async call(card: Card, role: Role, prompt: string, cwd?: string): Promise<RunResult | null> {
+    const res = await this.o.runtime.run({ agent: this.agent(role), role, prompt, cwd, allowedTools: toolsFor(this.o.stateDir, role) });
     if (res.costUsd) this.store.event(card.id, "cost", String(res.costUsd));
     if (res.limit) {
       this.pause(res.error ?? "usage limit");
@@ -202,7 +203,9 @@ export class Fleet {
     }
     const inFlight = card.repo && this.o.forge ? await this.o.forge.inFlight(card.repo) : [];
     const claimText = [...claims.map((c) => `claim by ${c.owner} on ${c.area}: ${c.reason}`), ...inFlight].join("\n");
-    const res = await this.call(card, "investigator", prompts.investigator(card, readDecisions(this.o.stateDir, card.repo), claimText));
+    // the investigator reads a fresh read-only checkout of the repo, so the plan comes from the code
+    const cwd = card.repo && this.o.forge?.checkout ? await this.o.forge.checkout(card.repo).catch(() => undefined) : undefined;
+    const res = await this.call(card, "investigator", prompts.investigator(card, readDecisions(this.o.stateDir, card.repo), claimText), cwd);
     if (!res) return;
     const v = parseVerdict<InvestigateVerdict>(res.text);
     if (!v) return this.technicalFailure(card, "investigator gave no verdict");
@@ -221,6 +224,8 @@ export class Fleet {
         this.store.move(card.id, "building", "plan ready", { draft: v.plan ?? "" });
         return this.log(`#${card.id} ${who}: needs a fix. Plan: ${(v.plan ?? "").slice(0, 80)}`, card);
       }
+      case "grant_tool":
+        return this.grant(card, v);
       case "wait":
         this.store.move(card.id, "waiting", `waiting on ${v.waiting_on}`, {
           waiting_on: v.waiting_on ?? "someone",
@@ -234,10 +239,31 @@ export class Fleet {
     }
   }
 
+  /** Fleet-editable allowlist: a tool grant always goes through the judge, and some specs never pass. */
+  private async grant(card: Card, v: InvestigateVerdict) {
+    const tool = (v.tool ?? "").trim();
+    const role = (["builder", "investigator", "triage", "gatekeeper", "deliverer", "chaser", "judge", "all"].includes(v.tool_role ?? "")
+      ? v.tool_role
+      : "builder") as Role | "all";
+    const refused = forbiddenGrant(tool);
+    if (refused) {
+      this.store.move(card.id, "you", `tool grant refused (${refused}): ${tool}`);
+      return this.log(`#${card.id} the fleet won't grant itself ${tool}: ${refused}. Sent to you.`, card);
+    }
+    if (!(await this.judge(card, `add "${tool}" to the ${role} allowlist`))) {
+      this.store.move(card.id, "you", `the judge rejected granting ${tool}`);
+      return this.log(`#${card.id} ${this.name("judge")}: rejected ${tool}. Sent to you.`, card);
+    }
+    grantTool(this.o.stateDir, role, tool);
+    this.store.event(card.id, "tool_granted", `${role}: ${tool}`);
+    this.store.move(card.id, "delivering", "tool granted", { draft: `Done: the fleet's ${role} can now use ${tool} (approved by the judge).` });
+    this.log(`#${card.id} granted ${tool} to ${role}, approved by ${this.name("judge")}`, card);
+  }
+
   private async build(card: Card) {
     const forge = this.o.forge!;
     const plan = card.draft ?? "";
-    const r = await forge.build(card, plan, prompts.builder(card, plan, readDecisions(this.o.stateDir, card.repo)), this.o.runtime, this.agent("builder"));
+    const r = await forge.build(card, plan, prompts.builder(card, plan, readDecisions(this.o.stateDir, card.repo)), this.o.runtime, this.agent("builder"), toolsFor(this.o.stateDir, "builder"));
     if (r.costUsd) this.store.event(card.id, "cost", String(r.costUsd));
     if (r.limit) return this.pause(r.error ?? "usage limit");
     if (!r.ok) return this.technicalFailure(card, r.error ?? "build failed");
@@ -266,8 +292,9 @@ export class Fleet {
     this.log(`#${card.id} ${who}: opened ${r.prUrl}`, card);
   }
 
-  private async judge(card: Card, what: string): Promise<boolean> {
-    const res = await this.call(card, "judge", prompts.judge(card, what));
+  private async judge(card: Card, what: string, evidence = ""): Promise<boolean> {
+    if (!evidence && card.pr_url && this.o.forge?.diff) evidence = await this.o.forge.diff(card.pr_url);
+    const res = await this.call(card, "judge", prompts.judge(card, what, evidence));
     const v = res ? parseVerdict<JudgeVerdict>(res.text) : null;
     this.store.event(card.id, "judge", v ? `${v.approve ? "approved" : "rejected"}: ${v.why}` : "no verdict");
     return !!v?.approve;
@@ -322,6 +349,7 @@ export class Fleet {
           this.store.move(card.id, "investigating", "PR closed without merge", { pr_url: null });
           continue;
         }
+        if (st === "open" && (await this.landPr(card))) continue;
       }
       const rule: ChaseRule | undefined =
         card.waiting_kind === "pr" ? this.x.chase.waiting_on_pr : this.x.chase.waiting_on_person;
@@ -344,6 +372,53 @@ export class Fleet {
         this.log(`#${card.id} ${this.name("chaser")}: ${chases} chases without progress, now visible to you`, card);
       }
     }
+  }
+
+  /** Red CI goes back to the builder; green CI merges within the merge autonomy level. True when the card moved. */
+  private async landPr(card: Card): Promise<boolean> {
+    const forge = this.o.forge!;
+    if (!forge.checks || !forge.merge) return false;
+    const ci = await forge.checks(card.pr_url!);
+    if (ci === "pending") return false;
+    if (ci === "fail") {
+      const fails = this.store.events(card.id).filter((e) => e.kind === "ci_failed").length + 1;
+      this.store.event(card.id, "ci_failed", card.pr_url);
+      if (fails >= MAX_ATTEMPTS) {
+        this.store.move(card.id, "repair", `CI failed ${fails} times on ${card.pr_url}`);
+        return true;
+      }
+      this.store.move(card.id, "building", "CI failed", {
+        draft: `The previous attempt (${card.pr_url}) failed CI. Read the failing checks with \`gh pr checks ${card.pr_url}\` and make them pass.`,
+      });
+      this.log(`#${card.id} ${this.name("chaser")}: CI red on ${card.pr_url}, back to ${this.name("builder")}`, card);
+      return true;
+    }
+    const level = this.x.autonomy.merge;
+    if (level === "off" || card.escalated) return false;
+    if (level === "propose" || level === "human") {
+      if (!this.store.events(card.id).some((e) => e.kind === "merge_proposed")) {
+        this.store.event(card.id, "merge_proposed", card.pr_url);
+        this.store.move(card.id, "you", `PR green${ci === "none" ? " (no CI)" : ""}, waiting for your merge`);
+        return true;
+      }
+      return false;
+    }
+    if (this.shadow) {
+      if (!this.store.events(card.id).some((e) => e.kind === "would_merge")) this.store.event(card.id, "would_merge", card.pr_url);
+      return false;
+    }
+    if (level === "judge" && !(await this.judge(card, `merge ${card.pr_url} (CI: ${ci})`))) {
+      this.store.move(card.id, "you", "the judge didn't approve the merge");
+      return true;
+    }
+    const m = await forge.merge(card.pr_url!);
+    if (!m.ok) {
+      this.technicalFailure(card, `merge failed: ${m.error}`);
+      return false;
+    }
+    this.store.move(card.id, "done", "merged by the fleet");
+    this.log(`#${card.id} merged ${card.pr_url}`, card);
+    return true;
   }
 
   // ---------- the human ----------
@@ -374,6 +449,16 @@ export class Fleet {
     recordDecision(this.o.stateDir, card.repo, `On "${card.title}": ${text}`, this.now());
     this.store.event(id, "human_decided", text);
     this.store.move(id, "investigating", "human decided", { body: `${card.body}\n\nDecision from the human: ${text}`, escalated: 0 });
+  }
+
+  /** Merge the card's PR yourself (after "PR green, waiting for your merge"). */
+  async humanMerge(id: number): Promise<void> {
+    const card = this.mustBeYours(id);
+    if (!card.pr_url || !this.o.forge?.merge) throw new Error(`#${id} has no PR to merge`);
+    const m = await this.o.forge.merge(card.pr_url);
+    if (!m.ok) throw new Error(`merge failed: ${m.error}`);
+    this.store.event(id, "human_merged", card.pr_url);
+    this.store.move(id, "done", "merged by the human");
   }
 
   humanIgnore(id: number): void {

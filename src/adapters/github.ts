@@ -68,20 +68,61 @@ export class GitHubForge implements Forge {
     return st === "merged" || st === "closed" || st === "open" ? st : null;
   }
 
-  async build(card: Card, _plan: string, prompt: string, runtime: Runtime, agent: string): Promise<BuildResult> {
+  async checks(url: string): Promise<"pass" | "fail" | "pending" | "none"> {
+    const r = await this.exec(["gh", "pr", "checks", url, "--json", "bucket"]);
+    if (/no checks reported/i.test(r.err)) return "none";
+    let rows: { bucket: string }[] = [];
+    try {
+      rows = JSON.parse(r.out || "[]");
+    } catch {
+      return "pending";
+    }
+    if (!rows.length) return "none";
+    if (rows.some((x) => x.bucket === "fail" || x.bucket === "cancel")) return "fail";
+    if (rows.some((x) => x.bucket === "pending")) return "pending";
+    return "pass";
+  }
+
+  async diff(url: string): Promise<string> {
+    const r = await this.exec(["gh", "pr", "diff", url]);
+    if (r.code !== 0) return "";
+    return r.out.length > 40_000 ? r.out.slice(0, 40_000) + "\n[diff truncated]" : r.out;
+  }
+
+  private async mirror(repo: string): Promise<{ mirror: string; base: string }> {
+    const mirror = join(this.workDir, "mirrors", repo.replace("/", "__"));
+    mkdirSync(join(this.workDir, "mirrors"), { recursive: true });
+    if (!existsSync(mirror)) {
+      const r = await this.exec(["gh", "repo", "clone", repo, mirror]);
+      if (r.code !== 0) throw new Error(`gh repo clone: ${r.err.trim()}`);
+    }
+    await this.git(["fetch", "--quiet", "origin"], mirror);
+    const base = (await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"], mirror)).replace("origin/", "");
+    return { mirror, base };
+  }
+
+  async checkout(repo: string): Promise<string> {
+    const { mirror, base } = await this.mirror(repo);
+    const dir = join(this.workDir, "read", repo.replace("/", "__"));
+    if (!existsSync(dir)) {
+      mkdirSync(join(this.workDir, "read"), { recursive: true });
+      await this.git(["worktree", "add", "--detach", dir, `origin/${base}`], mirror);
+    } else await this.git(["checkout", "-q", "--detach", `origin/${base}`], dir);
+    return dir;
+  }
+
+  async merge(url: string): Promise<{ ok: boolean; error?: string }> {
+    const r = await this.exec(["gh", "pr", "merge", url, "--squash", "--delete-branch"]);
+    return r.code === 0 ? { ok: true } : { ok: false, error: r.err.trim() };
+  }
+
+  async build(card: Card, _plan: string, prompt: string, runtime: Runtime, agent: string, allowedTools?: string[]): Promise<BuildResult> {
     if (!card.repo) return { ok: false, error: "card has no repo" };
-    const mirror = join(this.workDir, "mirrors", card.repo.replace("/", "__"));
     const wt = join(this.workDir, "worktrees", `card-${card.id}`);
     const branch = `pororoca/card-${card.id}`;
     try {
-      mkdirSync(join(this.workDir, "mirrors"), { recursive: true });
+      const { mirror, base } = await this.mirror(card.repo);
       mkdirSync(join(this.workDir, "worktrees"), { recursive: true });
-      if (!existsSync(mirror)) {
-        const r = await this.exec(["gh", "repo", "clone", card.repo, mirror]);
-        if (r.code !== 0) throw new Error(`gh repo clone: ${r.err.trim()}`);
-      }
-      await this.git(["fetch", "--quiet", "origin"], mirror);
-      const base = (await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"], mirror)).replace("origin/", "");
       // pattern: technical-failure retry realigns the worktree instead of reusing a broken one
       if (existsSync(wt)) {
         await this.exec(["git", "worktree", "remove", "--force", wt], { cwd: mirror });
@@ -90,7 +131,7 @@ export class GitHubForge implements Forge {
       await this.exec(["git", "branch", "-D", branch], { cwd: mirror });
       await this.git(["worktree", "add", "-b", branch, wt, `origin/${base}`], mirror);
 
-      const res = await runtime.run({ agent, role: "builder", prompt, cwd: wt, allowEdits: true });
+      const res = await runtime.run({ agent, role: "builder", prompt, cwd: wt, allowEdits: true, allowedTools });
       if (!res.ok) return { ok: false, error: res.error, limit: res.limit, costUsd: res.costUsd };
       const v = parseVerdict<BuildVerdict>(res.text) ?? {};
       if (v.already_done) return { ok: true, alreadyDone: v.already_done, costUsd: res.costUsd };
@@ -103,11 +144,17 @@ export class GitHubForge implements Forge {
       for (const f of files) if (/migrat/.test(f) && existsSync(join(wt, f))) contents[f] = readFileSync(join(wt, f), "utf8");
       const title = `${card.title}`.slice(0, 72);
       await this.git(["commit", "-q", "-m", `${title}\n\nPororoca card #${card.id}.`], wt);
-      await this.git(["push", "-q", "-u", "origin", branch], wt);
+      // a retry after red CI rebuilds the same branch, so the push replaces it
+      await this.git(["push", "-q", "-f", "-u", "origin", branch], wt);
       const body = `${v.summary ?? ""}\n\nCloses ${card.ext_id?.includes("#") ? card.ext_id : ""}\n${SIGNATURE.trim()}`;
       const pr = await this.exec(["gh", "pr", "create", "-R", card.repo, "--base", base, "--head", branch, "--title", title, "--body", body], { cwd: wt });
-      if (pr.code !== 0) throw new Error(`gh pr create: ${pr.err.trim()}`);
-      return { ok: true, prUrl: pr.out.trim().split("\n").pop(), files, contents, costUsd: res.costUsd };
+      let prUrl = pr.out.trim().split("\n").pop();
+      if (pr.code !== 0) {
+        if (!/already exists/i.test(pr.err)) throw new Error(`gh pr create: ${pr.err.trim()}`);
+        const v = await this.exec(["gh", "pr", "view", branch, "-R", card.repo, "--json", "url", "-q", ".url"]);
+        prUrl = v.out.trim();
+      }
+      return { ok: true, prUrl, files, contents, costUsd: res.costUsd };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }

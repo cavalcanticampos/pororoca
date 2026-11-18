@@ -35,10 +35,17 @@ export interface BuildResult {
 /** Code forge port: turns a plan into a PR. */
 export interface Forge {
   readonly id: string;
-  build(card: Card, plan: string, prompt: string, runtime: Runtime, agent: string): Promise<BuildResult>;
+  build(card: Card, plan: string, prompt: string, runtime: Runtime, agent: string, allowedTools?: string[]): Promise<BuildResult>;
   /** Open and recently merged PRs that touch the repo, for work claims. */
   inFlight(repo: string): Promise<string[]>;
   prState?(url: string): Promise<"open" | "merged" | "closed" | null>;
+  /** CI on the PR: `none` when the repo reports no checks. */
+  checks?(url: string): Promise<"pass" | "fail" | "pending" | "none">;
+  merge?(url: string): Promise<{ ok: boolean; error?: string }>;
+  /** The PR's diff as text, for the judge. */
+  diff?(url: string): Promise<string>;
+  /** A read-only, up-to-date checkout of the repo's default branch, for the investigator. */
+  checkout?(repo: string): Promise<string>;
 }
 
 export type Exec = (cmd: string[], opts?: { cwd?: string }) => Promise<{ code: number; out: string; err: string }>;

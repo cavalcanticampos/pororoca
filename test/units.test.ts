@@ -127,3 +127,12 @@ test("presets don't share state", () => {
   a["x-maloca"].agents.triage!.schedule = "0 0 * * *";
   expect(presetMaloca("solo-dev", human)["x-maloca"].agents.triage!.schedule).toBe("*/5 * * * *");
 });
+
+import { forbiddenGrant } from "../src/allowlist.ts";
+test("forbidden grants", () => {
+  expect(forbiddenGrant("Bash")).not.toBeNull();
+  expect(forbiddenGrant("Bash(*)")).not.toBeNull();
+  expect(forbiddenGrant("Bash(sudo apt:*)")).not.toBeNull();
+  expect(forbiddenGrant("Bash(npm run lint:*)")).toBeNull();
+  expect(forbiddenGrant("WebFetch")).toBeNull();
+});

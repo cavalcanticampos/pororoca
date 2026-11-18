@@ -3,6 +3,7 @@
 
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { readAllowlist } from "./allowlist.ts";
 import { GitHubForge, GitHubIssues } from "./adapters/github.ts";
 import { LocalInbox } from "./adapters/inbox.ts";
 import { realExec, type Conversation } from "./adapters/types.ts";
@@ -74,7 +75,9 @@ Cards
   send N                           approve the draft and send it
   edit N <text>                    send your text instead (counts as a correction)
   decide N <text>                  tell the fleet what to do; remembered per repo
+  merge N                          merge the card's green PR yourself
   ignore N | later N
+  allowlist                        tools each agent may use (the fleet edits it, the judge approves)
   outbox [--json]                  what was sent, or would have been in shadow mode
   claim <repo> [--area x] [--hours 4] -- <reason>
                                    "someone is on it": the fleet won't build there
@@ -115,7 +118,7 @@ const out = (s: string) => console.log(s);
 const asJson = (v: unknown) => out(JSON.stringify(v, null, 2));
 
 function cardLine(c: Card): string {
-  const extra = c.waiting_on ? ` · waiting on ${c.waiting_on}` : c.reason ? ` · ${c.reason}` : "";
+  const extra = c.state === "waiting" && c.waiting_on ? ` · waiting on ${c.waiting_on}` : c.reason ? ` · ${c.reason}` : "";
   return `#${c.id}  [${c.state}${c.escalated ? ", escalated" : ""}]  ${c.title}${extra}`;
 }
 
@@ -316,6 +319,15 @@ export async function main(argv: string[]): Promise<void> {
       out("\nhistory:");
       for (const e of events) out(`  ${e.at.slice(0, 19).replace("T", " ")}  ${e.kind}${e.detail ? `  ${e.detail.split("\n")[0]}` : ""}`);
       return;
+    }
+    case "merge": {
+      const { fleet } = openFleet(flags);
+      await fleet.humanMerge(n());
+      return out(`#${sub}: merged.`);
+    }
+    case "allowlist": {
+      const { stateDir } = paths(flags);
+      return asJson(readAllowlist(stateDir));
     }
     case "send":
     case "edit":
