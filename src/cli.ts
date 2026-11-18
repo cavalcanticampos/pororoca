@@ -6,6 +6,10 @@ import { dirname, join, resolve } from "node:path";
 import { readAllowlist } from "./allowlist.ts";
 import { GitHubForge, GitHubIssues } from "./adapters/github.ts";
 import { LocalInbox } from "./adapters/inbox.ts";
+import { SlackConversation, slackManifest } from "./adapters/slack.ts";
+import { connectGithub, connectSlack } from "./connect.ts";
+import { secret } from "./secrets.ts";
+import pkg from "../package.json";
 import { realExec, type Conversation } from "./adapters/types.ts";
 import { cronMatches } from "./cron.ts";
 import { runDemo } from "./demo.ts";
@@ -27,7 +31,7 @@ import { ClaudeCodeRuntime } from "./runtime.ts";
 import { Store } from "./store.ts";
 import type { Card, CardState } from "./types.ts";
 
-export const VERSION = "0.1.0-alpha.0";
+export const VERSION: string = pkg.version;
 
 type Flags = Record<string, string | boolean>;
 
@@ -52,14 +56,17 @@ export function parseArgs(argv: string[]): { pos: string[]; flags: Flags; rest: 
   return { pos, flags, rest };
 }
 
-const VALUE_FLAGS = new Set(["preset", "name", "human", "github", "repo", "repos", "file", "interval", "hours", "area", "days", "owner"]);
+const VALUE_FLAGS = new Set(["preset", "name", "human", "github", "repo", "repos", "file", "interval", "hours", "area", "days", "owner", "token", "as", "channels", "slack-token"]);
 
 const HELP = `pororoca ${VERSION}: a fleet of agents that works for you
 
 Setup
   doctor [--watch]                 check everything the fleet needs (and keep watching)
-  init [--preset solo-dev|tech-lead|founder] [--yes] [--repos a/b,c/d]
+  init [--preset solo-dev|tech-lead|founder] [--yes] [--repos a/b,c/d] [--slack-token xoxp-…]
                                    write maloca.yaml (replies wait for your OK)
+  connect github --repos a/b,c/d   check access, create the label, add the repos
+  connect slack --token xoxp-…     test and save the token (xoxp- acts as you, xoxb- as the app)
+  connect slack --manifest         print the Slack app manifest to create the app
   demo [--fast]                    watch a fleet work a fake inbox, no accounts needed
 
 Fleet
@@ -101,6 +108,14 @@ function openFleet(flags: Flags, log?: (s: string) => void): { fleet: Fleet; sto
   const repos = x.github?.repos ?? [];
   const conversations: Record<string, Conversation> = { inbox: new LocalInbox() };
   if (repos.length) conversations.github = new GitHubIssues(repos, x.github?.label ?? "pororoca");
+  const slackToken = x.slack ? secret(stateDir, "SLACK_TOKEN") : undefined;
+  if (x.slack && slackToken)
+    conversations.slack = new SlackConversation({
+      token: slackToken,
+      as: x.slack.as,
+      channels: x.slack.channels,
+      state: { get: (k) => store.getMeta(k), set: (k, v) => store.setMeta(k, v) },
+    });
   const fleet = new Fleet({
     maloca,
     store,
@@ -144,8 +159,17 @@ async function cmdInit(flags: Flags) {
   const repos = reposRaw.split(",").map((s) => s.trim()).filter(Boolean);
   const m = presetMaloca(preset, { id: "me", name, ...(github ? { github } : {}) }, repos, String(flags["fleet-name"] ?? "my-fleet"));
   writeFileSync(malocaPath, malocaToYaml(m));
+  const { stateDir } = paths(flags);
+  if (repos.length) {
+    const g = await connectGithub({ malocaPath, repos });
+    for (const l of g.lines) out(l);
+  }
+  const slackToken = String(flags["slack-token"] ?? (await ask("Slack token (xoxp-… acts as you, xoxb-… as an app; empty to skip; `pororoca connect slack --manifest` creates the app)?", "", yes)));
+  if (slackToken) {
+    const s = await connectSlack({ malocaPath, stateDir, token: slackToken });
+    for (const l of s.lines) out(l);
+  }
   out(`\nWrote ${malocaPath} (${preset}). Replies start at "propose": each one waits for your OK in \`pororoca you\`. Raise autonomy.reply to auto when you trust it.`);
-  if (repos.length) out(`The fleet works open issues labelled "${m["x-maloca"].github!.label}" in ${repos.join(", ")}.`);
   out(`\nNext:\n  pororoca doctor\n  pororoca inbox add "something you'd like off your plate"\n  pororoca up --once\n  pororoca you`);
 }
 
@@ -311,6 +335,21 @@ export async function main(argv: string[]): Promise<void> {
       if (c.pr_url) out(`\nPR: ${c.pr_url}`);
       out("\nhistory:");
       for (const e of events) out(`  ${e.at.slice(0, 19).replace("T", " ")}  ${e.kind}${e.detail ? `  ${e.detail.split("\n")[0]}` : ""}`);
+      return;
+    }
+    case "connect": {
+      const { malocaPath, stateDir } = paths(flags);
+      if (sub === "slack" && flags.manifest) return void process.stdout.write(slackManifest());
+      const list = (v: unknown) => String(v ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+      const r =
+        sub === "github"
+          ? await connectGithub({ malocaPath, repos: list(flags.repos ?? flags.repo ?? more.join(",")) })
+          : sub === "slack"
+            ? await connectSlack({ malocaPath, stateDir, token: flags.token as string | undefined, as: flags.as as "human" | "bot" | undefined, channels: list(flags.channels) })
+            : null;
+      if (!r) throw new Error("usage: pororoca connect github --repos a/b | connect slack --token xoxp-… | connect slack --manifest");
+      for (const l of r.lines) out(l);
+      if (!r.ok) process.exitCode = 1;
       return;
     }
     case "merge": {

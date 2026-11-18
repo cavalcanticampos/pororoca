@@ -20,7 +20,7 @@ export interface Metrics {
   costPerResolved: number | null;
 }
 
-const HUMAN_TOUCH = ["state:you", "escalated", "human_sent", "human_decided", "correction"];
+const HUMAN_TOUCH = ["state:you", "escalated", "human_sent", "human_decided", "correction", "human_took_over"];
 
 export function metrics(store: Store, days = 7): Metrics {
   const since = new Date(store.now().getTime() - days * 86_400_000).toISOString();

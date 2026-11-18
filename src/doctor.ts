@@ -3,7 +3,9 @@
 
 import { accessSync, constants, existsSync, mkdirSync } from "node:fs";
 import { realExec, type Exec } from "./adapters/types.ts";
+import { SlackApi } from "./adapters/slack.ts";
 import { checkMaloca, loadMaloca } from "./maloca.ts";
+import { secret } from "./secrets.ts";
 import type { Store } from "./store.ts";
 import { ACTIVE_STATES } from "./types.ts";
 
@@ -15,7 +17,7 @@ export interface Check {
   optional?: boolean;
 }
 
-export async function doctor(o: { malocaPath: string; stateDir: string; exec?: Exec; runtimeCommand?: string }): Promise<Check[]> {
+export async function doctor(o: { malocaPath: string; stateDir: string; exec?: Exec; runtimeCommand?: string; slackApi?: SlackApi }): Promise<Check[]> {
   const exec = o.exec ?? realExec;
   const run = async (cmd: string[]) => {
     try {
@@ -69,6 +71,27 @@ export async function doctor(o: { malocaPath: string; stateDir: string; exec?: E
           ? { name: "maloca.yaml", ok: false, detail: problems.join("; "), fix: "pororoca maloca check" }
           : { name: "maloca.yaml", ok: true, detail: `${m.name}, ${Object.keys(m["x-maloca"].agents).length} agents, ${m["x-maloca"].mode}` },
       );
+      for (const repo of m["x-maloca"].github?.repos ?? []) {
+        const v = await run(["gh", "repo", "view", repo, "--json", "viewerPermission", "-q", ".viewerPermission"]);
+        const perm = v.out.trim();
+        checks.push(
+          v.code === 0 && ["ADMIN", "MAINTAIN", "WRITE"].includes(perm)
+            ? { name: `repo ${repo}`, ok: true, detail: perm.toLowerCase() }
+            : { name: `repo ${repo}`, ok: false, detail: v.code === 0 ? `permission ${perm}, needs write` : "not reachable", fix: `pororoca connect github --repos ${repo}` },
+        );
+      }
+      if (m["x-maloca"].slack) {
+        const token = secret(o.stateDir, "SLACK_TOKEN");
+        if (!token) checks.push({ name: "Slack", ok: false, detail: "no SLACK_TOKEN", fix: "pororoca connect slack --token xoxp-…" });
+        else {
+          try {
+            const who = await (o.slackApi ?? new SlackApi(token)).call<{ user: string; team: string }>("auth.test");
+            checks.push({ name: "Slack", ok: true, detail: `${who.team} as ${who.user} (${m["x-maloca"].slack.as})` });
+          } catch (e) {
+            checks.push({ name: "Slack", ok: false, detail: (e as Error).message, fix: "pororoca connect slack --token xoxp-…" });
+          }
+        }
+      }
     } catch (e) {
       checks.push({ name: "maloca.yaml", ok: false, detail: (e as Error).message.replace(/\s*\n\s*-?\s*/g, " "), fix: "pororoca maloca check" });
     }
