@@ -79,7 +79,7 @@ describe("doctor", () => {
     const dir = mkdtempSync(join(tmpdir(), "pororoca-doc-"));
     writeFileSync(join(dir, "maloca.yaml"), malocaToYaml(presetMaloca("solo-dev", { id: "me" })));
     const checks = await doctor({ malocaPath: join(dir, "maloca.yaml"), stateDir: join(dir, ".p"), exec: fakeExec(() => ({ out: "ok" })) });
-    expect(checks.every((c) => c.ok)).toBe(true);
+    expect(checks.filter((c) => !c.ok)).toEqual([]);
   });
 
   test("watchers turn silent failures into findings", async () => {
