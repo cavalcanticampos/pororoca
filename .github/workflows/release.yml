@@ -1,0 +1,30 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - run: bun install --frozen-lockfile
+      - name: tag matches package.json
+        run: test "v$(jq -r .version package.json)" = "${GITHUB_REF_NAME}"
+      - run: bun run typecheck && bun test
+      - name: build binaries
+        run: |
+          mkdir -p out
+          for t in linux-x64 linux-arm64 darwin-x64 darwin-arm64; do
+            bun build src/cli.ts --compile --minify --target=bun-$t --outfile out/pororoca-$t
+          done
+          ./out/pororoca-linux-x64 demo --fast > /dev/null
+          (cd out && sha256sum pororoca-* > checksums.txt)
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" out/* --title "$GITHUB_REF_NAME" --generate-notes

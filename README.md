@@ -36,32 +36,45 @@ The market splits in two. Personal assistants triage and reply, but don't build.
 
 **Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is done: a fleet takes a labelled GitHub issue to a merged PR on its own. Next: a one-line install with release binaries, the Slack adapter and the Jirau cockpit. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
 
-## Try it
+## Install
 
-You need [Bun](https://bun.sh) 1.3+. There is no release binary yet.
+Linux and macOS (Windows: WSL):
 
 ```sh
-git clone https://github.com/cavalcanticampos/pororoca && cd pororoca
-bun install
-bun src/cli.ts demo          # a fleet working a fake inbox: no GitHub, Slack or Claude account
-bun run build                # one binary at dist/pororoca
+curl -fsSL https://cavalcanticampos.github.io/pororoca/install.sh | sh
 ```
 
-With [Claude Code](https://docs.anthropic.com/claude-code) logged in:
+One binary, checked against the release's SHA-256, in `~/.local/bin`. Run the same line to update. From source: `bun install && bun run build` gives `dist/pororoca`.
+
+## Start
 
 ```sh
-pororoca doctor                              # checks Claude Code, gh, git, state dir, maloca.yaml
-pororoca init --preset solo-dev              # writes maloca.yaml; replies wait for your OK
-pororoca inbox add "why is the signup test flaky?"
-pororoca up --once                           # work the inbox once and exit (up = keep running)
+pororoca demo                                # a fleet working a fake inbox: no accounts needed
+pororoca doctor                              # Claude Code, gh, git; each failure with its fix
+mkdir my-fleet && cd my-fleet
+pororoca init                                # asks for a preset, your repos and (optionally) Slack
+pororoca up                                  # run the fleet; `up --once` works the inbox once and exits
 pororoca you                                 # only what truly needs you
 pororoca metrics                             # share of work resolved without you
 ```
 
-A new fleet starts at `propose`: every reply waits for your OK in `pororoca you`. `pororoca metrics` counts how many drafts you approved unchanged; when that is high, raise `autonomy.reply` to `auto`. Each agent call is a Claude Code session, so set `x-maloca.runtime.model` if you want a cheaper model for the fleet.
+The fleet needs [Claude Code](https://docs.anthropic.com/claude-code) logged in; each agent call is a Claude Code session (set `x-maloca.runtime.model` for a cheaper model). Replies start at `propose`: each one waits for your OK in `pororoca you`. `pororoca metrics` counts the drafts you approved unchanged; when that is high, raise `autonomy.reply` to `auto`.
+
+### GitHub
+
+`pororoca connect github --repos you/app,you/api` checks your access and creates the `pororoca` label. Label an issue and the fleet takes it: triage, investigation, a PR with tests, green CI, the judge reads the diff, merge, issue closed.
+
+### Slack
+
+1. `pororoca connect slack --manifest > slack.yaml`, then at https://api.slack.com/apps choose *Create New App → From a manifest* and paste it.
+2. Install the app to your workspace and copy the **User OAuth Token** (`xoxp-…`).
+3. `pororoca connect slack --token xoxp-…`
+
+With a user token the fleet reads your DMs, group DMs and mentions, and replies as you, signed 🤖. If you answer first, it stays quiet. A bot token (`xoxb-…`) makes it reply as the app instead. The token is saved in `.pororoca/secrets.env` (mode 600), never in `maloca.yaml`.
 
 | Command | |
 |---|---|
+| `connect github --repos a/b` · `connect slack --token xoxp-…` | Test and save each connection |
 | `doctor [--watch]` | Checks, each failure with its fix; `--watch` adds watchers (repair queue, stalled cards, spend, disk, pause) |
 | `init [--preset] [--yes]` | `solo-dev`, `tech-lead` or `founder` |
 | `demo [--fast]` | Fake inbox, scripted runtime |

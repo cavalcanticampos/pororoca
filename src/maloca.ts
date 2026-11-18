@@ -57,6 +57,8 @@ export interface XMaloca {
   chase: { waiting_on_person?: ChaseRule; waiting_on_pr?: ChaseRule };
   escalation: { to: string; only_for: string[] };
   github?: { repos?: string[]; label?: string };
+  /** Token lives in secrets (SLACK_TOKEN), never here. `as: human` needs a user token (xoxp-). */
+  slack?: { as: "human" | "bot"; channels?: string[] };
   runtime?: { command?: string; model?: string };
   budget?: { daily_usd?: number };
 }

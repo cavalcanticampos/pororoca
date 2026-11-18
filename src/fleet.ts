@@ -300,7 +300,15 @@ export class Fleet {
     const draft = card.draft ?? "";
     if (draft && level !== "off") {
       if (level === "auto" || (level === "judge" && (await this.judge(card, `send this reply: ${draft}`)))) {
-        await this.send(card, draft);
+        try {
+          await this.send(card, draft);
+        } catch (e) {
+          if ((e as { code?: string }).code !== "human_answered") throw e;
+          // pattern "human takeover": you answered first, the fleet does not speak over you
+          this.store.event(card.id, "human_took_over");
+          this.store.move(card.id, "done", "you answered first");
+          return this.log(`#${card.id} ${this.name("deliverer")}: you answered first, staying quiet`, card);
+        }
         this.log(`#${card.id} ${this.name("deliverer")}: sent 🤖`, card);
       } else {
         this.store.move(card.id, "you", "reply ready, waiting for your OK");

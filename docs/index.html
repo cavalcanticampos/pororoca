@@ -55,18 +55,18 @@
 <div class="card"><div class="big">~300</div>follow-ups and chases</div>
 </div>
 <h2 id="start">Getting started</h2>
-<div class="note">There is no released binary yet. M1 is done (a fleet takes a GitHub issue to a merged PR on its own); to try it, clone the repo and build it: <code>bun install &amp;&amp; bun run build</code>. Follow along in the <a href="roadmap.html">roadmap</a>.</div>
-<div class="term"><div class="bar"><i></i><i></i><i></i></div><pre><span class="c"># check Claude Code, gh login, folders and limits</span>
-pororoca doctor
-<span class="c"># write a 6-agent maloca.yaml; replies wait for your OK</span>
-pororoca init --preset solo-dev
-<span class="c"># fake inbox, no GitHub or Slack: watch the fleet close cards in ~2 min</span>
+<div class="note">Linux and macOS (Windows: WSL). One binary, checked against the release SHA-256, installed in <code>~/.local/bin</code>. Run the same line to update. Needs <a href="https://docs.anthropic.com/claude-code">Claude Code</a> logged in.</div>
+<div class="term"><div class="bar"><i></i><i></i><i></i></div><pre><span class="c"># install</span>
+curl -fsSL https://cavalcanticampos.github.io/pororoca/install.sh | sh
+<span class="c"># fake inbox, no accounts: watch the fleet close cards</span>
 pororoca demo
-<span class="c"># start the fleet for real</span>
+<span class="c"># Claude Code, gh, git; each failure with its fix</span>
+pororoca doctor
+<span class="c"># preset, your repos and (optionally) Slack; replies wait for your OK</span>
+mkdir my-fleet &amp;&amp; cd my-fleet &amp;&amp; pororoca init
+<span class="c"># run the fleet</span>
 pororoca up
 <span class="c"># what truly needs you</span>
-pororoca you
-<span class="c"># share of work resolved without you</span>
-pororoca metrics</pre></div>
+pororoca you</pre></div>
 </main>
 <footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>
