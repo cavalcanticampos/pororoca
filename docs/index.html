@@ -1,15 +1,50 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pororoca</title><meta name="description" content="A fleet of AI agents that works for one person, so they stop being the bottleneck."><link rel="stylesheet" href="style.css"></head>
-<body><header><div class="wrap"><nav><a class="brand" href="index.html">🌊 Pororoca</a><a href="index.html" class=on>Home</a><a href="tour.html">Tour</a><a href="concepts.html">Concepts</a><a href="integrations.html">Integrations</a><a href="spec/maloca.html">maloca.yaml</a><a href="spec/adapters.html">Adapters</a><a href="safety.html">Safety</a><a href="compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<title>Pororoca</title><meta name="description" content="A fleet of AI agents that works for one person, so they stop being the bottleneck."><!-- meta:v2 --><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="canonical" href="https://cavalcanticampos.github.io/pororoca/"><meta property="og:type" content="website"><meta property="og:site_name" content="Pororoca"><meta property="og:title" content="Pororoca"><meta property="og:description" content="A fleet of AI agents that works for one person, so they stop being the bottleneck."><meta property="og:url" content="https://cavalcanticampos.github.io/pororoca/"><meta property="og:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Pororoca"><meta name="twitter:description" content="A fleet of AI agents that works for one person, so they stop being the bottleneck."><meta name="twitter:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"><!-- /meta --><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M4 20c4-6 8 2 12-3s8-3 12 1v8H4z" fill="var(--bg)" opacity=".55"/><path d="M4 23c4-4 8 2 12-1s8-2 12 1v5H4z" fill="var(--bg)"/></svg>Pororoca</a><div class="links"><a href="index.html" class=on>Home</a><a href="tour.html">Tour</a><a href="agents.html">Agents</a><a href="concepts.html">Concepts</a><a href="spec/maloca.html">maloca.yaml</a><a href="integrations.html">Integrations</a><a href="spec/adapters.html">Adapters</a><a href="safety.html">Safety</a><a href="roadmap.html">Roadmap</a><a href="compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></div></nav></div></header>
 <main class="wrap">
-<span class="pill">pre-alpha · design phase</span>
-<h1>A fleet of agents that works for <em>you</em>,<br>so you stop being the bottleneck.</h1>
+<section class="hero">
+<span class="pill">pre-alpha · M1 in progress</span>
+<h1>A fleet of agents that works for <em>you</em>, so you stop being the bottleneck.</h1>
 <p class="lead">Most multi-agent frameworks ask how a team of agents writes code. Pororoca asks a different question: how does a busy person (a tech lead, a manager, a founder) get off the critical path of everything that lands on them?</p>
+<div class="cta"><a class="btn primary" href="#start">Get started</a><a class="btn" href="agents.html">Meet the agents</a><a class="btn" href="roadmap.html">Roadmap</a></div>
+<svg class="wave" viewBox="0 0 960 90" preserveAspectRatio="none" aria-hidden="true"><path class="w2" fill="currentColor" opacity=".35" d="M0 62 C120 30 220 86 340 58 S560 22 680 52 S880 80 960 44 V90 H0Z"/><path fill="currentColor" opacity=".9" d="M0 72 C140 44 250 92 380 70 S600 40 720 66 S900 88 960 60 V90 H0Z"/></svg>
+</section>
 <div class="grid">
-<div class="card"><b>Filters</b>A gatekeeper decides what really needs you. Nothing else reaches you.</div>
-<div class="card"><b>Does the work</b>It triages, investigates, builds the fix, opens the PR and follows it to production.</div>
-<div class="card"><b>Speaks for you, within limits</b>Routine replies go out on their own, signed 🤖. Sensitive changes go to a judge. Real decisions come back to you.</div>
-<div class="card"><b>Chases until done</b>A card waiting on someone always has a chaser. "Handed off" is not "done".</div>
+<div class="card"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg><b>Filters</b>A gatekeeper decides what really needs you. Nothing else reaches you.</div>
+<div class="card"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg><b>Does the work</b>It triages, investigates, builds the fix, opens the PR and follows it to production.</div>
+<div class="card"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/></svg><b>Speaks for you, within limits</b>Routine replies go out on their own, signed 🤖. Sensitive changes go to a judge. Real decisions come back to you.</div>
+<div class="card"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><b>Chases until done</b>A card waiting on someone always has a chaser. "Handed off" is not "done".</div>
+</div>
+<h2>The idea in one picture</h2>
+<div class="flow"><div class="flow-sc">
+<svg viewBox="0 0 840 300" role="img" aria-labelledby="flowt flowd"><title id="flowt">How a card moves through a Pororoca fleet</title><desc id="flowd">Inbound items go through triage, investigate, build and deliver to done. Triage hands anything that might need the human to the gatekeeper, the only door to the lane You. The judge reviews sensitive builds and deliveries. Anything waiting on someone gets a chaser until it is really done.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" opacity=".6"/></marker></defs>
+<g class="edges" marker-end="url(#ar)">
+<path class="edge" d="M118 52H148"/><path class="edge" d="M258 52H288"/><path class="edge" d="M398 52H428"/><path class="edge" d="M538 52H568"/><path class="edge" d="M678 52H708"/>
+<path class="edge" d="M203 74V148"/>
+<path class="edge" d="M258 170H318"/>
+<path class="edge" d="M483 74V148"/><path class="edge" d="M623 74L548 150"/>
+<path class="edge" d="M462 170H430"/>
+<path class="edge dash" d="M623 74V96H800V262H262"/>
+</g>
+<text class="lbl" x="214" y="118">might need you?</text>
+<text class="lbl" x="494" y="118">sensitive</text>
+<text class="lbl" x="560" y="254">waiting on someone</text>
+<text class="lbl" x="150" y="296">nudges people and PRs, never marks "done" early</text>
+<g class="node"><rect x="8" y="30" width="110" height="44" rx="10"/><text x="63" y="57" text-anchor="middle">inbound</text></g>
+<g class="node"><rect x="148" y="30" width="110" height="44" rx="10"/><text x="203" y="57" text-anchor="middle">triage</text></g>
+<g class="node"><rect x="288" y="30" width="110" height="44" rx="10"/><text x="343" y="57" text-anchor="middle">investigate</text></g>
+<g class="node"><rect x="428" y="30" width="110" height="44" rx="10"/><text x="483" y="57" text-anchor="middle">build</text></g>
+<g class="node"><rect x="568" y="30" width="110" height="44" rx="10"/><text x="623" y="57" text-anchor="middle">deliver</text></g>
+<g class="node done"><rect x="708" y="30" width="110" height="44" rx="10"/><text x="763" y="57" text-anchor="middle">done</text></g>
+<g class="node hot"><rect x="148" y="148" width="110" height="44" rx="10"/><text x="203" y="175" text-anchor="middle">gatekeeper</text></g>
+<g class="node you"><rect x="318" y="148" width="110" height="44" rx="10"/><text x="373" y="175" text-anchor="middle">lane "You"</text></g>
+<g class="node hot"><rect x="462" y="148" width="110" height="44" rx="10"/><text x="517" y="175" text-anchor="middle">judge</text></g>
+<g class="node hot"><rect x="148" y="240" width="110" height="44" rx="10"/><text x="203" y="267" text-anchor="middle">chaser</text></g>
+<g class="tok-path" style="offset-path:path('M63 52H763')"><circle class="tok" r="7"/></g>
+<g class="tok-path" style="offset-path:path('M63 52H203V170H373');animation-duration:12s;animation-delay:-4s"><circle class="tok" r="7" style="fill:var(--accent2)"/></g>
+</svg></div>
+<p class="flow-note"><span class="swipe">Swipe to see the whole flow. </span>Most cards ride the top row to done. The few that need you go through the gatekeeper, the only door to your lane.</p>
 </div>
 <h2>One week of the reference fleet</h2>
 <p>Pororoca comes from a private fleet run for one tech lead. These are its numbers for one week:</p>
@@ -19,18 +54,19 @@
 <div class="card"><div class="big">608</div>PRs taken to done</div>
 <div class="card"><div class="big">~300</div>follow-ups and chases</div>
 </div>
-<h2>The idea in one picture</h2>
-<pre>  inbound ──► triage ──► investigate ──► build ──► deliver ──► done
-     ▲          │                          │          │
-     │      gatekeeper ──► lane "You" ◄────┴── judge  │
-   ports                                              ▼
-              chaser ◄──────── waiting on someone ────┘</pre>
-<h2>Getting started</h2>
-<div class="note">Nothing to install yet. Milestone M1 (core, CLI, local inbox and GitHub) is in progress. Follow along in the <a href="https://github.com/cavalcanticampos/pororoca/blob/main/docs/PRD.md">PRD</a>.</div>
-<pre># the plan for M1
-pororoca init      # pick solo mode, connect GitHub, write a 6-agent maloca.yaml
-pororoca up        # start the fleet in shadow mode
-pororoca you       # what truly needs you
-pororoca metrics   # share of work resolved without you</pre>
+<h2 id="start">Getting started</h2>
+<div class="note">There is no released binary yet. The M1 code (core, CLI, local inbox, demo) is landing now; to try it, clone the repo and build it: <code>bun install &amp;&amp; bun run build</code>. Follow along in the <a href="roadmap.html">roadmap</a>.</div>
+<div class="term"><div class="bar"><i></i><i></i><i></i></div><pre><span class="c"># check Claude Code, gh login, folders and limits</span>
+pororoca doctor
+<span class="c"># write a 6-agent maloca.yaml, shadow mode on</span>
+pororoca init --preset solo-dev
+<span class="c"># fake inbox, no GitHub or Slack: watch the fleet close cards in ~2 min</span>
+pororoca demo
+<span class="c"># start the fleet for real</span>
+pororoca up
+<span class="c"># what truly needs you</span>
+pororoca you
+<span class="c"># share of work resolved without you</span>
+pororoca metrics</pre></div>
 </main>
 <footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

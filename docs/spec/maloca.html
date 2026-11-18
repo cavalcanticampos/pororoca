@@ -1,34 +1,54 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>maloca.yaml · Pororoca</title><meta name="description" content="The maloca file: the team, its mode, schedules, autonomy, chasing and escalation."><link rel="stylesheet" href="../style.css"></head>
-<body><header><div class="wrap"><nav><a class="brand" href="../index.html">🌊 Pororoca</a><a href="../index.html">Home</a><a href="../tour.html">Tour</a><a href="../concepts.html">Concepts</a><a href="../integrations.html">Integrations</a><a href="../spec/maloca.html" class=on>maloca.yaml</a><a href="../spec/adapters.html">Adapters</a><a href="../safety.html">Safety</a><a href="../compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<title>maloca.yaml · Pororoca</title><meta name="description" content="The maloca file: the team, its mode, schedules, autonomy, chasing and escalation."><!-- meta:v2 --><link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="canonical" href="https://cavalcanticampos.github.io/pororoca/spec/maloca.html"><meta property="og:type" content="website"><meta property="og:site_name" content="Pororoca"><meta property="og:title" content="maloca.yaml · Pororoca"><meta property="og:description" content="The maloca file: the team, its mode, schedules, autonomy, chasing and escalation."><meta property="og:url" content="https://cavalcanticampos.github.io/pororoca/spec/maloca.html"><meta property="og:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="maloca.yaml · Pororoca"><meta name="twitter:description" content="The maloca file: the team, its mode, schedules, autonomy, chasing and escalation."><meta name="twitter:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"><!-- /meta --><link rel="stylesheet" href="../style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M4 20c4-6 8 2 12-3s8-3 12 1v8H4z" fill="var(--bg)" opacity=".55"/><path d="M4 23c4-4 8 2 12-1s8-2 12 1v5H4z" fill="var(--bg)"/></svg>Pororoca</a><div class="links"><a href="../index.html">Home</a><a href="../tour.html">Tour</a><a href="../agents.html">Agents</a><a href="../concepts.html">Concepts</a><a href="../spec/maloca.html" class=on>maloca.yaml</a><a href="../integrations.html">Integrations</a><a href="../spec/adapters.html">Adapters</a><a href="../safety.html">Safety</a><a href="../roadmap.html">Roadmap</a><a href="../compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></div></nav></div></header>
 <main class="wrap">
 <h1><code>maloca.yaml</code></h1><p class="lead">One file declares the team: who the agents are, when they run, who chases whom, what each one may do alone, and where things escalate.</p>
-<pre>version: "0.2"            # OpenRig RigSpec version
-name: my-fleet
-pods:
-  - id: flow
-    members:
-      - { id: gatekeeper,  runtime: claude-code }
-      - { id: triage,      runtime: claude-code }
+<p>This is the file <code>pororoca init --preset solo-dev</code> writes. Hover or tap a highlighted key to see what it does.</p>
+<div class="yx" id="yx"><pre><span class="k" tabindex="0" data-k="version">version</span>: &quot;0.2&quot;  <span class="cm"># OpenRig RigSpec version</span>
+<span class="k" tabindex="0" data-k="name">name</span>: my-fleet  <span class="cm"># your fleet name</span>
+<span class="k" tabindex="0" data-k="pods">pods</span>:  <span class="cm"># OpenRig: groups of members</span>
+  - id: core
+    <span class="k" tabindex="0" data-k="members">members</span>:  <span class="cm"># one entry per agent session</span>
+      - id: gatekeeper
+        <span class="k" tabindex="0" data-k="runtime">runtime</span>: claude-code  <span class="cm"># the only runtime in v0.1</span>
+      - { id: triage,       runtime: claude-code }
       - { id: investigator, runtime: claude-code }
-      - { id: builder,     runtime: claude-code }
-      - { id: deliverer,   runtime: claude-code }
-      - { id: chaser,      runtime: claude-code }
-x-maloca:
-  mode: solo                     # solo | team
-  humans: [{ id: ana, address: ana@external }]
-  gatekeeper: flow.gatekeeper    # the only door to a human lane
-  schedules: { triage: "*/2 * * * *", chaser: "*/10 9-18 * * 1-5" }
-  autonomy:                      # propose | judge | alone
-    reply.routine: propose
-    pr.open: alone
-    pr.merge.sensitive: judge
-  chase: { people: off, after: 24h, escalate_after: 2d }
-  shadow: true</pre>
+      - { id: builder,      runtime: claude-code }
+      - { id: deliverer,    runtime: claude-code }
+      - { id: chaser,       runtime: claude-code }
+<span class="k" tabindex="0" data-k="edges">edges</span>: []  <span class="cm"># OpenRig: who talks to whom</span>
+<span class="k" tabindex="0" data-k="x-maloca">x-maloca</span>:  <span class="cm"># Pororoca extension block</span>
+  <span class="k" tabindex="0" data-k="mode">mode</span>: solo  <span class="cm"># solo | team</span>
+  <span class="k" tabindex="0" data-k="humans">humans</span>:  <span class="cm"># the people the fleet works for</span>
+    - id: me
+      name: Your Name
+      github: your-handle
+  <span class="k" tabindex="0" data-k="shadow">shadow</span>: { enabled: true, days: 7 }  <span class="cm"># propose only, then report</span>
+  <span class="k" tabindex="0" data-k="agents">agents</span>:  <span class="cm"># member id -&gt; name, role, schedule</span>
+    gatekeeper:   { name: Guaraná,  <span class="k" tabindex="0" data-k="role">role</span>: gatekeeper }
+    triage:       { name: Curupira, role: triage, <span class="k" tabindex="0" data-k="schedule">schedule</span>: &quot;*/5 * * * *&quot; }
+    investigator: { name: Boto,     role: investigator }
+    builder:      { name: Boitatá,  role: builder }
+    deliverer:    { name: Uirapuru, role: deliverer }
+    chaser:       { name: Iara,     role: chaser, schedule: &quot;*/10 * * * *&quot; }
+  <span class="k" tabindex="0" data-k="autonomy">autonomy</span>:  <span class="cm"># propose | judge | auto (or human, off)</span>
+    <span class="k" tabindex="0" data-k="reply">reply</span>: propose
+    <span class="k" tabindex="0" data-k="open_pr">open_pr</span>: auto
+    <span class="k" tabindex="0" data-k="merge">merge</span>: judge
+    <span class="k" tabindex="0" data-k="sensitive_change">sensitive_change</span>: human  <span class="cm"># CI config, migrations, infra, secrets</span>
+    <span class="k" tabindex="0" data-k="chase_people">chase_people</span>: off
+  <span class="k" tabindex="0" data-k="chase">chase</span>:  <span class="cm"># when and how often to nudge</span>
+    <span class="k" tabindex="0" data-k="waiting_on_person">waiting_on_person</span>: { after: 60m, every: 30m, max: 4 }
+    <span class="k" tabindex="0" data-k="waiting_on_pr">waiting_on_pr</span>: { after: 2h, every: 2h, max: 3 }
+  <span class="k" tabindex="0" data-k="escalation">escalation</span>:  <span class="cm"># what may reach you</span>
+    <span class="k" tabindex="0" data-k="to">to</span>: me
+    <span class="k" tabindex="0" data-k="only_for">only_for</span>: [credential, money, personal, product_conflict, irreversible_prod]</pre><aside aria-live="polite"><h3 id="yk">x-maloca</h3><div id="yd">Everything Pororoca adds lives here. OpenRig rejects unknown keys today, so <code>pororoca export --openrig</code> writes a copy without this block.</div></aside></div>
 <h2>Compatibility with OpenRig</h2>
 <p>Underneath, the file is an <a href="https://openrig.dev/specs/rigspec">OpenRig RigSpec v0.2</a> (pods, members, edges). There is one catch: today the RigSpec rejects unknown keys at every level, so a file with <code>x-maloca</code> does not load in OpenRig as is.</p>
 <ul><li><code>pororoca export --openrig</code> writes a plain <code>rig.yaml</code> without the extension.</li>
 <li>We will propose upstream that the RigSpec accept and keep <code>x-*</code> keys.</li></ul>
-<h2>Checks</h2><p><code>pororoca maloca check</code> fails when:</p><ul><li>the running fleet differs from the file;</li><li>any card state has no chaser;</li><li>an agent can reach a human lane without going through the gatekeeper.</li></ul>
+<h2>Checks</h2><p><code>pororoca maloca check</code> fails when:</p><ul><li>the running fleet differs from the file;</li><li>any card state has no chaser;</li><li>an agent can reach a human lane without going through the gatekeeper;</li><li>there is not exactly one gatekeeper, or <code>sensitive_change</code> is set to <code>auto</code>.</li></ul>
 </main>
-<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer>
+<script>(function(){var E={"version": "The OpenRig RigSpec version this file follows underneath. Pororoca reads <code>\"0.2\"</code>.", "name": "A name for the fleet. Shown in <code>pororoca status</code> and used as the rig name on export.", "pods": "OpenRig pods group members. A starter maloca has one pod, <code>core</code>.", "members": "One member per agent. The <code>id</code> is how the rest of the file refers to it.", "runtime": "Which agent runtime starts the session. v0.1 ships one adapter: <code>claude-code</code>.", "edges": "OpenRig edges declare who talks to whom. Pororoca routes cards through its pipeline, so this stays empty unless you also run the file in OpenRig.", "x-maloca": "Everything Pororoca adds lives here. OpenRig rejects unknown keys today, so <code>pororoca export --openrig</code> writes a copy without this block.", "mode": "<code>solo</code>: one human, the fleet works for them. <code>team</code>: several humans, each with a lane (after v0.1).", "humans": "The people the fleet works for. In solo mode, exactly one. The <code>github</code> handle lets the fleet recognise your own PRs and comments.", "shadow": "Shadow mode: the fleet proposes but sends nothing. After <code>days</code>, <code>pororoca metrics</code> shows what it would have resolved without you, and you switch levels on one by one.", "agents": "Maps each member id to a name and a role. The role is what the core reads; the name is just a label you can change.", "role": "One of <code>gatekeeper</code>, <code>triage</code>, <code>investigator</code>, <code>builder</code>, <code>deliverer</code>, <code>chaser</code>, plus optional roles (<code>judge</code>, <code>sentinel</code>, <code>smith</code>, <code>video</code>). There must be exactly one gatekeeper.", "schedule": "A cron expression. Agents without one are woken by the pipeline when a card reaches their stage.", "autonomy": "What each kind of action may do alone. <code>propose</code>: draft only. <code>judge</code>: the judge decides. <code>auto</code>: go ahead. <code>human</code>: always ask you. <code>off</code>: never.", "reply": "Replies sent on your behalf, always signed \ud83e\udd16. Starts at <code>propose</code> until shadow mode earns it.", "open_pr": "Opening a pull request. Safe to run alone: a PR changes nothing until it merges.", "merge": "Merging a green PR. <code>judge</code> means the judge agent reviews the diff against your rules first.", "sensitive_change": "Changes to CI config, migrations, infrastructure or secrets. Never lower than <code>judge</code>; the default asks you.", "chase_people": "Nudging people outside the fleet. Off until you turn it on; chasing PRs and agents is always on.", "chase": "Every card that waits on someone has a chaser. <code>after</code>: first nudge. <code>every</code>: repeat. <code>max</code>: nudges before it escalates.", "waiting_on_person": "A card blocked on a person (a reply, an approval, a credential).", "waiting_on_pr": "A card blocked on a PR outside the fleet, such as someone else\u2019s change it depends on.", "escalation": "The rules for the lane \"You\". Only the gatekeeper can put a card there, and only for these reasons.", "to": "Which human gets escalations. In solo mode, you.", "only_for": "The only reasons a card may reach you. Anything else goes back to the fleet with the gatekeeper\u2019s note on what is missing."};var x=document.getElementById("yx");x.classList.add("js");var h=document.getElementById("yk"),d=document.getElementById("yd"),cur;function show(el){if(cur)cur.classList.remove("on");cur=el;el.classList.add("on");h.textContent=el.dataset.k;d.innerHTML=E[el.dataset.k]||"";}x.querySelectorAll(".k").forEach(function(el){el.addEventListener("mouseenter",function(){show(el)});el.addEventListener("click",function(){show(el)});el.addEventListener("focus",function(){show(el)});});var f=x.querySelector('[data-k="x-maloca"]');if(f)show(f);})();</script>
+</body></html>

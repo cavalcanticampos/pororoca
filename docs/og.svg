@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#0f1513"/>
+<path d="M0 470 C180 400 330 520 520 460 S860 380 1040 440 C1100 440 1160 460 1200 450 V630 H0Z" fill="#e3a35f" opacity=".45"/>
+<path d="M0 510 C200 450 360 560 560 500 S900 430 1080 490 C1120 480 1170 500 1200 495 V630 H0Z" fill="#4fc1a6"/>
+<rect x="80" y="80" width="64" height="64" rx="16" fill="#4fc1a6"/><path d="M88 120c8-12 16 4 24-6s16-6 24 2v16H88z" fill="#0f1513" opacity=".55"/><path d="M88 126c8-8 16 4 24-2s16-4 24 2v10H88z" fill="#0f1513"/>
+<text x="164" y="126" font-family="Georgia,serif" font-size="44" font-weight="600" fill="#e6ebe7">Pororoca</text>
+<text x="80" y="250" font-family="Georgia,serif" font-size="64" font-weight="600" fill="#e6ebe7">A fleet of agents that works for you,</text>
+<text x="80" y="330" font-family="Georgia,serif" font-size="64" font-weight="600" fill="#e6ebe7">so you stop being the bottleneck.</text>
+<text x="80" y="398" font-family="Inter,Arial,sans-serif" font-size="28" fill="#9aa59f">Open source · self-hosted · built on Claude Code · OpenRig compatible</text>
+</svg>
