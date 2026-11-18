@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS cards (
   chases INTEGER NOT NULL DEFAULT 0,
   last_chase TEXT,
   escalated INTEGER NOT NULL DEFAULT 0,
-  shadow INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(source, ext_id)
@@ -53,7 +52,7 @@ CREATE TABLE IF NOT EXISTS claims (
 
 const PATCHABLE = new Set([
   "repo", "title", "body", "state", "kind", "reason", "draft", "waiting_on", "waiting_kind",
-  "pr_url", "attempts", "chases", "last_chase", "escalated", "shadow",
+  "pr_url", "attempts", "chases", "last_chase", "escalated",
 ]);
 
 export interface Claim {

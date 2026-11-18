@@ -12,17 +12,17 @@ export interface Metrics {
   neededYou: number;
   sentByFleet: number;
   sentByYou: number;
-  wouldSend: number;
+  /** Drafts the human sent as they were: the evidence for moving a level from propose to auto. */
+  approvedUnchanged: number;
   corrections: number;
   repair: number;
   costUsd: number;
   costPerResolved: number | null;
-  shadow: boolean;
 }
 
 const HUMAN_TOUCH = ["state:you", "escalated", "human_sent", "human_decided", "correction"];
 
-export function metrics(store: Store, days = 7, shadow = false): Metrics {
+export function metrics(store: Store, days = 7): Metrics {
   const since = new Date(store.now().getTime() - days * 86_400_000).toISOString();
   const count = (sql: string, ...args: (string | number)[]) =>
     (store.db.query(sql).get(...args) as { n: number }).n;
@@ -53,24 +53,28 @@ export function metrics(store: Store, days = 7, shadow = false): Metrics {
     neededYou,
     sentByFleet: sent - sentByYou,
     sentByYou,
-    wouldSend: ev("would_send"),
+    approvedUnchanged: count(
+      `SELECT COUNT(*) n FROM events e WHERE e.kind = 'human_sent' AND e.at >= ?
+       AND NOT EXISTS (SELECT 1 FROM events c WHERE c.card_id = e.card_id AND c.kind = 'correction')`,
+      since,
+    ),
     corrections: ev("correction"),
     repair: count("SELECT COUNT(*) n FROM cards WHERE state = 'repair'"),
     costUsd: Math.round(cost * 100) / 100,
     costPerResolved: closed ? Math.round((cost / closed) * 100) / 100 : null,
-    shadow,
   };
 }
 
 export function formatMetrics(m: Metrics): string {
   const pct = m.resolvedWithoutYou === null ? "n/a" : `${Math.round(m.resolvedWithoutYou * 100)}%`;
   const lines = [
-    `Last ${m.days} days${m.shadow ? " (shadow mode: nothing was sent)" : ""}`,
+    `Last ${m.days} days`,
     "",
     `  resolved without you   ${pct}   (${m.closedWithoutYou} closed alone, ${m.neededYou} needed you)`,
     `  needed you             ${m.neededYou}`,
     `  arrived                ${m.arrived}`,
-    m.shadow ? `  would have sent        ${m.wouldSend}` : `  sent by the fleet 🤖   ${m.sentByFleet}   (by you: ${m.sentByYou})`,
+    `  sent by the fleet 🤖   ${m.sentByFleet}   (by you: ${m.sentByYou})`,
+    `  drafts you approved    ${m.approvedUnchanged} of ${m.sentByYou} unchanged   (high = that level can go to auto)`,
     `  your corrections       ${m.corrections}   (should fall week over week)`,
     `  repair queue           ${m.repair}`,
     `  cost                   $${m.costUsd}${m.costPerResolved !== null ? `   ($${m.costPerResolved} per closed card)` : ""}`,

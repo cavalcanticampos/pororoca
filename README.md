@@ -34,7 +34,7 @@ The market splits in two. Personal assistants triage and reply, but don't build.
 
 ## Status
 
-**Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is done: a fleet takes a labelled GitHub issue to a merged PR on its own. M2 (Slack, shadow report) is next. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
+**Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is done: a fleet takes a labelled GitHub issue to a merged PR on its own. Next: a one-line install with release binaries, the Slack adapter and the Jirau cockpit. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
 
 ## Try it
 
@@ -51,14 +51,14 @@ With [Claude Code](https://docs.anthropic.com/claude-code) logged in:
 
 ```sh
 pororoca doctor                              # checks Claude Code, gh, git, state dir, maloca.yaml
-pororoca init --preset solo-dev              # writes maloca.yaml; starts in shadow mode
+pororoca init --preset solo-dev              # writes maloca.yaml; replies wait for your OK
 pororoca inbox add "why is the signup test flaky?"
 pororoca up --once                           # work the inbox once and exit (up = keep running)
 pororoca you                                 # only what truly needs you
 pororoca metrics                             # share of work resolved without you
 ```
 
-Shadow mode proposes and sends nothing. `pororoca outbox` shows what the fleet would have sent; `pororoca shadow off` lets the autonomy levels in `maloca.yaml` apply. Each agent call is a Claude Code session, so set `x-maloca.runtime.model` if you want a cheaper model for the fleet.
+A new fleet starts at `propose`: every reply waits for your OK in `pororoca you`. `pororoca metrics` counts how many drafts you approved unchanged; when that is high, raise `autonomy.reply` to `auto`. Each agent call is a Claude Code session, so set `x-maloca.runtime.model` if you want a cheaper model for the fleet.
 
 | Command | |
 |---|---|

@@ -82,7 +82,6 @@ export async function runDemo(o: { fast?: boolean; write?: (s: string) => void }
   try {
     const store = new Store(dir);
     const maloca = presetMaloca("tech-lead", { id: "you", name: "You" }, ["acme/web"], "demo-fleet");
-    maloca["x-maloca"].shadow = { enabled: false };
     maloca["x-maloca"].autonomy.reply = "auto";
     const fleet = new Fleet({
       maloca,
@@ -120,9 +119,9 @@ export async function runDemo(o: { fast?: boolean; write?: (s: string) => void }
     const lane = humanLane(store);
     write(c.bold(`\n  Your lane: ${lane.length} card${lane.length === 1 ? "" : "s"}`));
     for (const card of lane) write(`  ${c.coral(`👤 #${card.id}`)} ${card.title}  ${c.dim(`(${card.reason})`)}`);
-    const m = metrics(store, 7, false);
+    const m = metrics(store, 7);
     write("\n" + formatMetrics(m).replace(/^/gm, "  "));
-    write(c.dim("\n  A real fleet starts in shadow mode: it proposes and sends nothing until you switch each autonomy level on."));
+    write(c.dim("\n  The demo runs with replies on auto. A real fleet starts at propose: every reply waits for your OK until you raise the level."));
     write(`  Next: ${c.bold("pororoca doctor")}, then ${c.bold("pororoca init")}.\n`);
     store.close();
     return { resolvedWithoutYou: m.resolvedWithoutYou, lane: lane.length };

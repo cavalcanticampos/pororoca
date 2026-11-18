@@ -31,9 +31,8 @@ describe("maloca", () => {
       expect(checkMaloca(m)).toEqual([]);
     }
   });
-  test("starts safe: shadow on, reply propose, chasing off, sensitive to the human", () => {
+  test("starts safe: reply propose, chasing off, sensitive to the human", () => {
     const x = presetMaloca("solo-dev", human)["x-maloca"];
-    expect(x.shadow?.enabled).toBe(true);
     expect(x.autonomy.reply).toBe("propose");
     expect(x.autonomy.chase_people).toBe("off");
     expect(x.autonomy.sensitive_change).toBe("human");
