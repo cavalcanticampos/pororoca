@@ -82,7 +82,7 @@ Everything external is a **port with adapters**:
 | Work tracker | **GitHub Issues** | Jira, Linear, custom |
 | Secrets | env vars and a file vault | 1Password, Passbolt, Vault |
 | Agent runtime | **Claude Code** | Codex, others |
-| Scheduler | built-in daemon reading `maloca.yaml` | OpenRig as host |
+| Scheduler | built-in daemon reading `maloca.yaml` (decided, see §11) | OpenRig as host, through the same file |
 
 An adapter is a small interface: `fetch()`, `reply(card, text, as_human)`, `link(card)`, plus capability flags. Company-specific connectors live in private packages outside this repo.
 
@@ -163,7 +163,14 @@ The private fleet this came from migrates onto the core along the way and stays 
   - **What decides it:** Anthropic's Agent SDK ships for TypeScript and Python, not Go or Rust. Claude Code mods, including the Jirau cockpit, are TypeScript, and so is OpenRig. Slack (Bolt) and GitHub (Octokit) have official TypeScript libraries.
   - **Go's main advantage** is a single static binary, and Bun covers that: users install one executable with no Node required.
 
+- **Scheduler and host: Pororoca's own daemon, compatible with OpenRig** (2026-11-17).
+  - **Own daemon:** `pororoca up` starts a single process that reads `maloca.yaml`, runs the schedules, the pipeline and the chaser, and launches agents as Claude Code sessions. There is no crontab, tmux or OpenRig install to set up, and the roadmap doesn't depend on another project accepting changes.
+  - **Compatible with OpenRig:**
+    - `maloca.yaml` stays a valid OpenRig rig spec v0.2, with Pororoca fields under `x-maloca`, so the same file can be launched by OpenRig.
+    - The card store maps onto OpenRig's queue model: states, human-gate and "waiting on". A future adapter can therefore mirror cards to an OpenRig queue.
+    - The Jirau cockpit can read either one.
+  - **Rule:** nothing in the core may assume it is the only host. Anything OpenRig already does well (seats, handover, restore) is used through the adapter, not rebuilt.
+
 ## 12. Open questions
 
-- Should OpenRig be the scheduler and host, or should Pororoca ship its own daemon and keep OpenRig compatibility?
 - What is the minimum adapter interface that still lets Slack "reply as you" and a CLI inbox share one shape?
