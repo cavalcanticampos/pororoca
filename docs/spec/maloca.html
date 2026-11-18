@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>maloca.yaml · Pororoca</title><meta name="description" content="The maloca file: the team, its mode, schedules, autonomy, chasing and escalation."><link rel="stylesheet" href="../style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="../index.html">🌊 Pororoca</a><a href="../index.html">Home</a><a href="../tour.html">Tour</a><a href="../concepts.html">Concepts</a><a href="../integrations.html">Integrations</a><a href="../spec/maloca.html" class=on>maloca.yaml</a><a href="../spec/adapters.html">Adapters</a><a href="../safety.html">Safety</a><a href="../compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<main class="wrap">
+<h1><code>maloca.yaml</code></h1><p class="lead">One file declares the team: who the agents are, when they run, who chases whom, what each one may do alone, and where things escalate.</p>
+<pre>version: "0.2"            # OpenRig RigSpec version
+name: my-fleet
+pods:
+  - id: flow
+    members:
+      - { id: gatekeeper,  runtime: claude-code }
+      - { id: triage,      runtime: claude-code }
+      - { id: investigator, runtime: claude-code }
+      - { id: builder,     runtime: claude-code }
+      - { id: deliverer,   runtime: claude-code }
+      - { id: chaser,      runtime: claude-code }
+x-maloca:
+  mode: solo                     # solo | team
+  humans: [{ id: ana, address: ana@external }]
+  gatekeeper: flow.gatekeeper    # the only door to a human lane
+  schedules: { triage: "*/2 * * * *", chaser: "*/10 9-18 * * 1-5" }
+  autonomy:                      # propose | judge | alone
+    reply.routine: propose
+    pr.open: alone
+    pr.merge.sensitive: judge
+  chase: { people: off, after: 24h, escalate_after: 2d }
+  shadow: true</pre>
+<h2>Compatibility with OpenRig</h2>
+<p>Underneath, the file is an <a href="https://openrig.dev/specs/rigspec">OpenRig RigSpec v0.2</a> (pods, members, edges). There is one catch: today the RigSpec rejects unknown keys at every level, so a file with <code>x-maloca</code> does not load in OpenRig as is.</p>
+<ul><li><code>pororoca export --openrig</code> writes a plain <code>rig.yaml</code> without the extension.</li>
+<li>We will propose upstream that the RigSpec accept and keep <code>x-*</code> keys.</li></ul>
+<h2>Checks</h2><p><code>pororoca maloca check</code> fails when:</p><ul><li>the running fleet differs from the file;</li><li>any card state has no chaser;</li><li>an agent can reach a human lane without going through the gatekeeper.</li></ul>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

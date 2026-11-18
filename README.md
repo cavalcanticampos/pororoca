@@ -30,6 +30,8 @@ This started as a personal fleet run by one tech lead. Over one week it handled:
 
 The market splits in two. Personal assistants triage and reply, but don't build. Code factories build, but don't talk to people for you or chase anyone. Pororoca joins the two halves under one autonomy policy.
 
+**Site:** https://cavalcanticampos.github.io/pororoca/
+
 ## Status
 
 **Pre-alpha. Design phase.** The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).

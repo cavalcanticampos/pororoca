@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pororoca vs OpenRig</title><meta name="description" content="Two different questions: how a team of agents works, and how one person stops being the bottleneck."><link rel="stylesheet" href="../style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="../index.html">🌊 Pororoca</a><a href="../index.html">Home</a><a href="../tour.html">Tour</a><a href="../concepts.html">Concepts</a><a href="../integrations.html">Integrations</a><a href="../spec/maloca.html">maloca.yaml</a><a href="../spec/adapters.html">Adapters</a><a href="../safety.html">Safety</a><a href="../compare/openrig.html" class=on>vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<main class="wrap">
+<h1>Pororoca and OpenRig</h1><p class="lead">They answer two different questions. OpenRig asks how a team of coding agents can live and work together on your machine. Pororoca asks how one busy person gets off the critical path. Pororoca is built to be compatible with OpenRig, not to replace it.</p>
+<div class="tw"><table><tr><th></th><th>OpenRig</th><th>Pororoca</th></tr>
+<tr><td>Centre of gravity</td><td>The agent team: seats, pods, queue, continuity</td><td>The human: the gatekeeper, their lane, the share resolved without them</td></tr>
+<tr><td>Team file</td><td>RigSpec</td><td><code>maloca.yaml</code>, a RigSpec plus <code>x-maloca</code>, exportable</td></tr>
+<tr><td>Speaks for the human</td><td>No; its Slack app asks the operator, as a bot</td><td>Yes, within declared autonomy levels and signed 🤖, or as a bot</td></tr>
+<tr><td>Follow-up</td><td>Wakes and escalates agents</td><td>Also chases people outside the fleet until the work closes</td></tr>
+<tr><td>Modes</td><td>One operator over a team</td><td><code>solo</code> or <code>team</code></td></tr>
+<tr><td>Maturity</td><td>Released, with a large integration matrix</td><td>Pre-alpha</td></tr></table></div>
+<p>If you want a long-lived team of coding agents, start with <a href="https://openrig.dev">OpenRig</a>. If what drowns you is everything that lands on you, that is Pororoca's job, and the two can run together.</p>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

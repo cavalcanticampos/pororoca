@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concepts · Pororoca</title><meta name="description" content="Glossary: maloca, agent, card, lane, gatekeeper, autonomy, chaser, jirau."><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="index.html">🌊 Pororoca</a><a href="index.html">Home</a><a href="tour.html">Tour</a><a href="concepts.html" class=on>Concepts</a><a href="integrations.html">Integrations</a><a href="spec/maloca.html">maloca.yaml</a><a href="spec/adapters.html">Adapters</a><a href="safety.html">Safety</a><a href="compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<main class="wrap">
+<h1>Concepts</h1><div class="tw"><table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td><b>Maloca</b></td><td>A team, declared in <code>maloca.yaml</code>. Its mode is <code>solo</code> (one human, and the fleet works for them) or <code>team</code> (several humans, each with their own lane). The word is the Amazonian communal house.</td></tr>
+<tr><td><b>Agent</b></td><td>An autonomous Claude Code session with a role, a schedule and tools. It is not a script that returns JSON.</td></tr>
+<tr><td><b>Card</b></td><td>One unit of work: a request, an alert or an issue. Its states follow OpenRig's queue: pending, in-progress, blocked, done, failed, denied, canceled.</td></tr>
+<tr><td><b>Lane "You"</b></td><td>The cards that truly need the human, and only those.</td></tr>
+<tr><td><b>Gatekeeper</b></td><td>The only agent allowed to put a card in a human's lane.</td></tr>
+<tr><td><b>Autonomy level</b></td><td>For each kind of action, whether the fleet may act alone, needs the judge, or needs the human. Every level starts at <em>propose only</em>.</td></tr>
+<tr><td><b>Judge</b></td><td>The agent that reviews sensitive actions, such as CI config, migrations, infrastructure and secrets.</td></tr>
+<tr><td><b>Chaser</b></td><td>The agent that owns follow-up. A card waiting on someone always has one.</td></tr>
+<tr><td><b>Shadow mode</b></td><td>The fleet proposes and sends nothing. It is how a new fleet earns trust and produces its first metric.</td></tr>
+<tr><td><b>Jirau</b></td><td>The cockpit: a Claude Code pane next to your chat with your priorities and your lane. The word is the raised wooden platform of riverside houses.</td></tr>
+</table></div>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

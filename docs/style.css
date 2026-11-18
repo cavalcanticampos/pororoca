@@ -1,0 +1,23 @@
+:root{--bg:#f6f4ee;--fg:#1d2420;--muted:#5b655f;--line:#d9d5c9;--card:#fffdf7;--accent:#0f6b5c;--accent2:#b5651d;--code:#ece8dc}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1513;--fg:#e6ebe7;--muted:#9aa59f;--line:#26302c;--card:#151d1a;--accent:#4fc1a6;--accent2:#e3a35f;--code:#1b2421}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--accent)}header{border-bottom:1px solid var(--line)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px}
+nav{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;padding:14px 0}
+nav .brand{font-weight:700;font-size:18px;color:var(--fg);text-decoration:none;margin-right:auto}
+nav a{text-decoration:none;color:var(--muted);font-size:15px}nav a:hover,nav a.on{color:var(--fg)}
+main{padding:32px 0 64px}h1{font-size:clamp(28px,5vw,42px);line-height:1.15;margin:0 0 12px}
+h2{margin-top:44px;font-size:24px}h3{font-size:18px;margin-top:28px}
+.lead{font-size:19px;color:var(--muted);max-width:720px}
+.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card b{display:block;margin-bottom:4px}
+.big{font-size:34px;font-weight:700;color:var(--accent);line-height:1}
+.tw{overflow-x:auto;margin:16px 0}table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;background:var(--code);border-radius:6px}
+code{padding:1px 5px}pre{padding:14px;overflow-x:auto;line-height:1.5}
+.note{border-left:3px solid var(--accent2);padding:8px 14px;background:var(--card);border-radius:0 8px 8px 0}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding:20px 0}

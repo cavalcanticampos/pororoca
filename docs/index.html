@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pororoca</title><meta name="description" content="A fleet of AI agents that works for one person, so they stop being the bottleneck."><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="index.html">🌊 Pororoca</a><a href="index.html" class=on>Home</a><a href="tour.html">Tour</a><a href="concepts.html">Concepts</a><a href="integrations.html">Integrations</a><a href="spec/maloca.html">maloca.yaml</a><a href="spec/adapters.html">Adapters</a><a href="safety.html">Safety</a><a href="compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<main class="wrap">
+<span class="pill">pre-alpha · design phase</span>
+<h1>A fleet of agents that works for <em>you</em>,<br>so you stop being the bottleneck.</h1>
+<p class="lead">Most multi-agent frameworks ask how a team of agents writes code. Pororoca asks a different question: how does a busy person (a tech lead, a manager, a founder) get off the critical path of everything that lands on them?</p>
+<div class="grid">
+<div class="card"><b>Filters</b>A gatekeeper decides what really needs you. Nothing else reaches you.</div>
+<div class="card"><b>Does the work</b>It triages, investigates, builds the fix, opens the PR and follows it to production.</div>
+<div class="card"><b>Speaks for you, within limits</b>Routine replies go out on their own, signed 🤖. Sensitive changes go to a judge. Real decisions come back to you.</div>
+<div class="card"><b>Chases until done</b>A card waiting on someone always has a chaser. "Handed off" is not "done".</div>
+</div>
+<h2>One week of the reference fleet</h2>
+<p>Pororoca comes from a private fleet run for one tech lead. These are its numbers for one week:</p>
+<div class="grid">
+<div class="card"><div class="big">7%</div>of 1,377 incoming items needed the human</div>
+<div class="card"><div class="big">98.5%</div>of 1,143 messages on his behalf went out automatically</div>
+<div class="card"><div class="big">608</div>PRs taken to done</div>
+<div class="card"><div class="big">~300</div>follow-ups and chases</div>
+</div>
+<h2>The idea in one picture</h2>
+<pre>  inbound ──► triage ──► investigate ──► build ──► deliver ──► done
+     ▲          │                          │          │
+     │      gatekeeper ──► lane "You" ◄────┴── judge  │
+   ports                                              ▼
+              chaser ◄──────── waiting on someone ────┘</pre>
+<h2>Getting started</h2>
+<div class="note">Nothing to install yet. Milestone M1 (core, CLI, local inbox and GitHub) is in progress. Follow along in the <a href="https://github.com/cavalcanticampos/pororoca/blob/main/docs/PRD.md">PRD</a>.</div>
+<pre># the plan for M1
+pororoca init      # pick solo mode, connect GitHub, write a 6-agent maloca.yaml
+pororoca up        # start the fleet in shadow mode
+pororoca you       # what truly needs you
+pororoca metrics   # share of work resolved without you</pre>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

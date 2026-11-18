@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adapter contracts · Pororoca</title><meta name="description" content="The small TypeScript interfaces every Pororoca connector implements."><link rel="stylesheet" href="../style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="../index.html">🌊 Pororoca</a><a href="../index.html">Home</a><a href="../tour.html">Tour</a><a href="../concepts.html">Concepts</a><a href="../integrations.html">Integrations</a><a href="../spec/maloca.html">maloca.yaml</a><a href="../spec/adapters.html" class=on>Adapters</a><a href="../safety.html">Safety</a><a href="../compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></nav></div></header>
+<main class="wrap">
+<h1>Adapter contracts</h1><p class="lead">Each port has a small interface. Where OpenRig already has a contract, Pororoca uses the same shape, so an OpenRig adapter is a thin translation.</p>
+<h2>Conversation</h2><p>One interface covers both Slack, which replies as you, and the local CLI inbox. "Speaks as you" is a capability flag, not a separate design. The envelopes follow OpenRig's Relay gateway v1: <code>eventId</code>, <code>deliveryId</code>, <code>replyRef</code>, <code>intent</code> and <code>outcome</code>, in push or pull mode.</p>
+<pre>export interface ConversationPort {
+  readonly connectorRef: string;
+  readonly caps: { replyAsHuman: boolean; threads: boolean; edit: boolean;
+                   retract: boolean; mode: "push" | "pull" };
+  fetch(cursor?: string): Promise&lt;{ events: InboundEvent[]; cursor: string }&gt;;
+  send(msg: Outbound): Promise&lt;Receipt&gt;;   // the core adds the " 🤖" signature
+  ack?(deliveryId: string): Promise&lt;void&gt;; // pull mode: the inbox confirms custody
+  edit?(r: Receipt, text: string): Promise&lt;Receipt&gt;;  // feeds the embarrassment metric
+  retract?(r: Receipt): Promise&lt;void&gt;;
+  link(ref: ThreadRef | Receipt): string;
+}
+export interface Outbound {
+  deliveryId: string; to: ThreadRef | Address; text: string;
+  as: "human" | "bot";               // "human" requires caps.replyAsHuman
+  intent: "decision" | "update"; outcome?: "interrupt" | "notify" | "digest";
+  replyRef?: string;
+}</pre>
+<h2>Forge and tracker</h2>
+<pre>export interface ForgePort {
+  readonly caps: { checks: boolean; autoMerge: boolean };
+  openPR(i: { repo: string; branch: string; title: string; body: string; cardId: string }): Promise&lt;{ id: string; url: string }&gt;;
+  status(prId: string): Promise&lt;{ state: "open" | "merged" | "closed";
+    checks: "pending" | "pass" | "fail"; review: "none" | "changes" | "approved" }&gt;;
+  comment(prId: string, text: string): Promise&lt;void&gt;;
+  merge?(prId: string): Promise&lt;void&gt;;
+}
+export interface TrackerPort {
+  fetch(cursor?: string): Promise&lt;{ items: TrackerItem[]; cursor: string }&gt;;
+  setState(externalId: string, s: CardState, note?: string): Promise&lt;void&gt;;
+  comment(externalId: string, text: string): Promise&lt;void&gt;;
+}
+// the same states as an OpenRig queue item
+export type CardState = "pending" | "in-progress" | "blocked" | "done"
+  | "failed" | "denied" | "canceled" | "handed-off";</pre>
+<div class="note"><b>Rule:</b> a card waiting on a person outside the fleet is <code>blocked</code> on that person and is never <code>done</code>. Closing on hand-off is how open work goes silent.</div>
+<h2>Humans and runtime</h2><p>Humans follow OpenRig's human registry: an <code>@external</code> address, connector bindings with a secrets <em>reference</em>, and availability. The agent runtime follows OpenRig's harness and runner contract (working, idle, or needs input; exact resume or a clear failure), and its conformance check is our test.</p>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>
