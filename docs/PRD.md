@@ -166,11 +166,18 @@ The private fleet this came from migrates onto the core along the way and stays 
 - **Scheduler and host: Pororoca's own daemon, compatible with OpenRig** (2026-11-17).
   - **Own daemon:** `pororoca up` starts a single process that reads `maloca.yaml`, runs the schedules, the pipeline and the chaser, and launches agents as Claude Code sessions. There is no crontab, tmux or OpenRig install to set up, and the roadmap doesn't depend on another project accepting changes.
   - **Compatible with OpenRig:**
-    - `maloca.yaml` stays a valid OpenRig rig spec v0.2, with Pororoca fields under `x-maloca`, so the same file can be launched by OpenRig.
+    - `maloca.yaml` is an OpenRig rig spec v0.2 underneath, with Pororoca fields under `x-maloca`. OpenRig's RigSpec currently rejects unknown keys at every level, so `pororoca export --openrig` writes a plain `rig.yaml`. We will also propose upstream that the RigSpec accept and keep `x-*` keys.
     - The card store maps onto OpenRig's queue model: states, human-gate and "waiting on". A future adapter can therefore mirror cards to an OpenRig queue.
     - The Jirau cockpit can read either one.
   - **Rule:** nothing in the core may assume it is the only host. Anything OpenRig already does well (seats, handover, restore) is used through the adapter, not rebuilt.
 
+- **Adapter contracts** (2026-11-17), specified in [spec/adapters](https://cavalcanticampos.github.io/pororoca/spec/adapters.html):
+  - **Conversation:** one interface for both Slack and the CLI inbox. "Speaks as you" is a capability flag, and the envelopes mirror OpenRig's Relay gateway v1 in push or pull mode.
+  - **Humans:** mirror OpenRig's human registry.
+  - **Card states:** mirror OpenRig's queue item states. A card waiting on an outside person is `blocked`, never `done`.
+  - **Agent runtime:** follows OpenRig's harness and runner contract, and its conformance check is our test.
+- **OpenRig's Slack app is bot-only** and "never answers as the person". Replying as the human is therefore both Pororoca's difference and its main risk (see §10.1 and §10.4).
+
 ## 12. Open questions
 
-- What is the minimum adapter interface that still lets Slack "reply as you" and a CLI inbox share one shape?
+- None blocking M1.

@@ -1,0 +1,10 @@
+# Pororoca
+> A fleet of AI agents that works for one person, so that person stops being the bottleneck. Pre-alpha, MIT.
+
+- [Home](https://cavalcanticampos.github.io/pororoca/): the problem, the reference fleet's numbers and the plan
+- [Concepts](https://cavalcanticampos.github.io/pororoca/concepts.html): maloca, card, lane, gatekeeper, autonomy, chaser, jirau
+- [maloca.yaml](https://cavalcanticampos.github.io/pororoca/spec/maloca.html): the team file and its compatibility with OpenRig
+- [Adapter contracts](https://cavalcanticampos.github.io/pororoca/spec/adapters.html): the TypeScript ports
+- [Integrations](https://cavalcanticampos.github.io/pororoca/integrations.html): the connector matrix
+- [Safety](https://cavalcanticampos.github.io/pororoca/safety.html): shadow mode, autonomy, signature, embarrassment metric
+- [PRD](https://github.com/cavalcanticampos/pororoca/blob/main/docs/PRD.md)
