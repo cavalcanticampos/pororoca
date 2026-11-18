@@ -22,6 +22,7 @@ import {
   type Maloca,
   type Preset,
 } from "./maloca.ts";
+import { installMod, snapshot, uninstallMod } from "./jirau.ts";
 import { formatMetrics, metrics } from "./metrics.ts";
 import { ClaudeCodeRuntime } from "./runtime.ts";
 import { Store } from "./store.ts";
@@ -85,6 +86,10 @@ Checks
   maloca check                     schema, chasers, gatekeeper paths
   maloca export --openrig          plain OpenRig rig.yaml
   metrics [--days 7] [--json]      share of work resolved without you
+
+Cockpit
+  jirau install | uninstall        the Jirau pane in Claude Code
+  jirau snapshot --json            what the pane reads
 `;
 
 function paths(flags: Flags) {
@@ -373,6 +378,25 @@ export async function main(argv: string[]): Promise<void> {
       }
       if (sub === "export" && flags.openrig) return void process.stdout.write(exportOpenRig(loadMaloca(malocaPath)));
       throw new Error("usage: pororoca maloca check | maloca export --openrig");
+    }
+    case "jirau": {
+      // the cockpit: `snapshot --json` is what the pane reads; install/uninstall put it in Claude Code
+      if (sub === "install") return out(`Jirau installed at ${installMod()}. Open Claude Code in your fleet's folder (or set POROROCA_DIR) and it opens beside the chat; /jirau opens it anywhere.`);
+      if (sub === "uninstall") {
+        const d = uninstallMod();
+        return out(d ? `Removed ${d}.` : "Jirau was not installed.");
+      }
+      if (sub !== "snapshot") throw new Error("usage: pororoca jirau install | uninstall | snapshot --json");
+      const { fleet, store, maloca, stateDir } = openFleet(flags);
+      let running = false;
+      const pidFile = join(stateDir, "up.pid");
+      if (existsSync(pidFile)) {
+        try {
+          process.kill(Number(readFileSync(pidFile, "utf8")), 0);
+          running = true;
+        } catch {}
+      }
+      return asJson(snapshot(store, { fleet: maloca.name, running, pausedUntil: fleet.pausedUntil() }));
     }
     case "metrics": {
       const { store } = openFleet(flags);

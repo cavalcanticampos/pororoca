@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jirau · Pororoca</title><meta name="description" content="Jirau, the cockpit: a Claude Code pane beside your chat with what needs you and what the fleet is doing."><!-- meta:v2 --><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="canonical" href="https://cavalcanticampos.github.io/pororoca/jirau.html"><meta property="og:type" content="website"><meta property="og:site_name" content="Pororoca"><meta property="og:title" content="Jirau · Pororoca"><meta property="og:description" content="Jirau, the cockpit: a Claude Code pane beside your chat with what needs you and what the fleet is doing."><meta property="og:url" content="https://cavalcanticampos.github.io/pororoca/jirau.html"><meta property="og:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Jirau · Pororoca"><meta name="twitter:description" content="Jirau, the cockpit: a Claude Code pane beside your chat with what needs you and what the fleet is doing."><meta name="twitter:image" content="https://cavalcanticampos.github.io/pororoca/og.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"><!-- /meta --><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="wrap"><nav><a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M4 20c4-6 8 2 12-3s8-3 12 1v8H4z" fill="var(--bg)" opacity=".55"/><path d="M4 23c4-4 8 2 12-1s8-2 12 1v5H4z" fill="var(--bg)"/></svg>Pororoca</a><div class="links"><a href="index.html">Home</a><a href="tour.html">Tour</a><a href="agents.html">Agents</a><a href="jirau.html" class=on>Jirau</a><a href="concepts.html">Concepts</a><a href="spec/maloca.html">maloca.yaml</a><a href="integrations.html">Integrations</a><a href="spec/adapters.html">Adapters</a><a href="safety.html">Safety</a><a href="roadmap.html">Roadmap</a><a href="compare/openrig.html">vs OpenRig</a><a href="https://github.com/cavalcanticampos/pororoca">GitHub ↗</a></div></nav></div></header>
+<main class="wrap">
+<h1>Jirau</h1><p class="lead">The cockpit. A pane beside your Claude Code chat with the two things that matter: what needs you, and what the fleet is doing. A <i>jirau</i> is the raised wooden platform in a riverside house, where you keep what must stay out of the water.</p>
+<div class="term"><div class="bar"><i></i><i></i><i></i></div><pre>🛖 my-fleet running                              r: ↻ 15:17:03
+──────────────────────────────────────────────────────────
+✋ 2 need you
+
+● #1 Renew the vendor? $12k
+  money: needs your signature
+
+▾ #4 Can we drop the legacy export job?
+  product_conflict: two teams asked opposite things
+  ╭──────────────────────────────────────────────────────╮
+  │ Draft                                                │
+  │ I suggest keeping it until March.                    │
+  │ send    later    ignore                              │
+  │ /jirau edit 4 &lt;your text&gt; · /jirau decide 4 &lt;what&gt;    │
+  ╰──────────────────────────────────────────────────────╯
+──────────────────────────────────────────────────────────
+🌊 the fleet is on 2
+· #3 waiting on PR #42   Signup 500s · 2m
+⚠ #6 investigating       Flaky checkout test · 3h
+
+92% without you · 1 correction this week · r refreshes</pre></div>
+<h2>Install</h2>
+<div class="term"><div class="bar"><i></i><i></i><i></i></div><pre><span class="c"># copy the pane into Claude Code (~/.claude/skills/pororoca-jirau)</span>
+pororoca jirau install
+<span class="c"># open Claude Code where your maloca.yaml lives: the pane opens beside the chat</span>
+claude</pre></div>
+<p>The pane opens by itself only in a folder that holds a fleet, so it stays quiet in every other session. Anywhere else, <code>/jirau</code> opens it; set <code>POROROCA_DIR</code> to point it at a fleet and <code>POROROCA_BIN</code> if <code>pororoca</code> is not on your PATH. <code>pororoca jirau uninstall</code> removes it.</p>
+<h2>What it shows</h2>
+<div class="grid">
+<div class="card"><b>The fleet</b>Running or stopped, paused by a usage limit, and how many cards sit in the repair queue.</div>
+<div class="card"><b>Your lane</b>Only the cards the gatekeeper sent you, plus waits the chaser escalated. Open one to read the reason, the draft and the PR.</div>
+<div class="card"><b>What the fleet is on</b>Every open card with its real state: triaging, investigating, building, fixing red CI, waiting on a person or a PR. Never "delivered" while it is still open; stalled cards get a ⚠.</div>
+<div class="card"><b>The metric</b>Share of work resolved without you, and your corrections this week.</div>
+</div>
+<h2>Acting from the pane</h2>
+<p>Open a card and press <b>send</b>, <b>merge</b>, <b>later</b> or <b>ignore</b>. For anything that needs your words, type it:</p>
+<pre>/jirau send 3
+/jirau edit 3 Friday at 15:00 works better
+/jirau decide 4 keep the export job until March
+/jirau merge 7
+/jirau ignore 9</pre>
+<p>Every action runs the same CLI (<code>pororoca send|edit|decide|merge|ignore|later N</code>), so the pane never holds state of its own. It reads <code>pororoca jirau snapshot --json</code> every 10 seconds; <kbd>r</kbd> refreshes now, and a toast tells you when a new card needs you.</p>
+</main>
+<footer><div class="wrap">Pororoca is pre-alpha and MIT licensed. Built by <a href="https://github.com/cavalcanticampos">@cavalcanticampos</a>. Compatible with <a href="https://openrig.dev">OpenRig</a>, not affiliated.</div></footer></body></html>

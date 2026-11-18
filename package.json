@@ -4,11 +4,13 @@
   "description": "A fleet of AI agents that works for one person, so that person stops being the bottleneck.",
   "license": "MIT",
   "type": "module",
-  "bin": { "pororoca": "src/cli.ts" },
+  "bin": {
+    "pororoca": "src/cli.ts"
+  },
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/cli.ts --compile --outfile dist/pororoca",
+    "build": "bun scripts/embed-jirau.ts && bun build src/cli.ts --compile --outfile dist/pororoca",
     "demo": "bun src/cli.ts demo"
   },
   "devDependencies": {

@@ -1,0 +1,12 @@
+{
+  "name": "pororoca-jirau",
+  "version": "0.1.0",
+  "description": "Jirau, the Pororoca cockpit: what needs you and what the fleet is doing, beside the chat",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "Roberto Campos",
+    "url": "https://github.com/cavalcanticampos"
+  },
+  "homepage": "https://cavalcanticampos.github.io/pororoca/jirau.html",
+  "license": "MIT"
+}
