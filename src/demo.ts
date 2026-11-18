@@ -68,12 +68,9 @@ class DemoForge implements Forge {
   }
 }
 
-const c = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-  teal: (s: string) => `\x1b[36m${s}\x1b[0m`,
-  coral: (s: string) => `\x1b[38;5;209m${s}\x1b[0m`,
-};
+const color = !!process.stdout.isTTY && !process.env.NO_COLOR;
+const paint = (code: string) => (s: string) => (color ? `\x1b[${code}m${s}\x1b[0m` : s);
+const c = { dim: paint("2"), bold: paint("1"), teal: paint("36"), coral: paint("38;5;209") };
 
 export async function runDemo(o: { fast?: boolean; write?: (s: string) => void } = {}): Promise<{ resolvedWithoutYou: number | null; lane: number }> {
   const write = o.write ?? ((s: string) => console.log(s));
