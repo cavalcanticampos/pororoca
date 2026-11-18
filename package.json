@@ -10,7 +10,7 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/cli.ts --compile --outfile dist/pororoca",
+    "build": "bun scripts/embed-jirau.ts && bun build src/cli.ts --compile --outfile dist/pororoca",
     "demo": "bun src/cli.ts demo"
   },
   "devDependencies": {
