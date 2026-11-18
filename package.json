@@ -1,0 +1,18 @@
+{
+  "name": "pororoca",
+  "version": "0.1.0-alpha.0",
+  "description": "A fleet of AI agents that works for one person, so that person stops being the bottleneck.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "pororoca": "src/cli.ts" },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/cli.ts --compile --outfile dist/pororoca",
+    "demo": "bun src/cli.ts demo"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.0",
+    "typescript": "^5.6.0"
+  }
+}

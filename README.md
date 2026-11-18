@@ -34,7 +34,43 @@ The market splits in two. Personal assistants triage and reply, but don't build.
 
 ## Status
 
-**Pre-alpha. Design phase.** The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
+**Pre-alpha.** Milestone M1 (core, CLI, local inbox, GitHub) is in progress. The first user is the private fleet this came from, and it is being migrated into this core piece by piece. See [docs/PRD.md](docs/PRD.md).
+
+## Try it
+
+You need [Bun](https://bun.sh) 1.3+. There is no release binary yet.
+
+```sh
+git clone https://github.com/cavalcanticampos/pororoca && cd pororoca
+bun install
+bun src/cli.ts demo          # a fleet working a fake inbox: no GitHub, Slack or Claude account
+bun run build                # one binary at dist/pororoca
+```
+
+With [Claude Code](https://docs.anthropic.com/claude-code) logged in:
+
+```sh
+pororoca doctor                              # checks Claude Code, gh, git, state dir, maloca.yaml
+pororoca init --preset solo-dev              # writes maloca.yaml; starts in shadow mode
+pororoca inbox add "why is the signup test flaky?"
+pororoca up --once                           # work the inbox once and exit (up = keep running)
+pororoca you                                 # only what truly needs you
+pororoca metrics                             # share of work resolved without you
+```
+
+Shadow mode proposes and sends nothing. `pororoca outbox` shows what the fleet would have sent; `pororoca shadow off` lets the autonomy levels in `maloca.yaml` apply. Each agent call is a Claude Code session, so set `x-maloca.runtime.model` if you want a cheaper model for the fleet.
+
+| Command | |
+|---|---|
+| `doctor [--watch]` | Checks, each failure with its fix; `--watch` adds watchers (repair queue, stalled cards, spend, disk, pause) |
+| `init [--preset] [--yes]` | `solo-dev`, `tech-lead` or `founder` |
+| `demo [--fast]` | Fake inbox, scripted runtime |
+| `up [--once]` · `down` · `status` | Run the fleet |
+| `inbox add <text>` | Local inbox |
+| `you` · `show N` · `send N` · `edit N <text>` · `decide N <text>` · `ignore N` · `later N` | Your lane |
+| `claim <repo> -- <reason>` | "Someone is on it": the fleet won't build there |
+| `maloca check` · `maloca export --openrig` | Holes in the chase, paths around the gatekeeper; plain OpenRig rig.yaml |
+| `metrics [--json]` | Resolved without you, corrections, cost per card |
 
 ## Concepts
 
