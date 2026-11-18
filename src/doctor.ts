@@ -70,7 +70,7 @@ export async function doctor(o: { malocaPath: string; stateDir: string; exec?: E
           : { name: "maloca.yaml", ok: true, detail: `${m.name}, ${Object.keys(m["x-maloca"].agents).length} agents, ${m["x-maloca"].mode}` },
       );
     } catch (e) {
-      checks.push({ name: "maloca.yaml", ok: false, detail: (e as Error).message.split("\n")[0]!, fix: "pororoca maloca check" });
+      checks.push({ name: "maloca.yaml", ok: false, detail: (e as Error).message.replace(/\s*\n\s*-?\s*/g, " "), fix: "pororoca maloca check" });
     }
   }
   return checks;
