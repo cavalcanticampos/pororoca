@@ -47,7 +47,17 @@ say "Installed $("$DIR/pororoca" version) at $DIR/pororoca"
 
 case ":$PATH:" in
   *":$DIR:"*) ;;
-  *) say ""; say "Add it to your PATH:"; say "  echo 'export PATH=\"$DIR:\$PATH\"' >> ~/.$(basename "${SHELL:-sh}")rc && export PATH=\"$DIR:\$PATH\"" ;;
+  *)
+    case "$(basename "${SHELL:-}")" in
+      zsh) rc="~/.zshrc" ;;
+      bash) rc="~/.bashrc" ;;
+      fish) rc="" ;;
+      *) rc="~/.profile" ;;
+    esac
+    say ""
+    say "Add it to your PATH:"
+    if [ -n "$rc" ]; then say "  echo 'export PATH=\"$DIR:\$PATH\"' >> $rc && export PATH=\"$DIR:\$PATH\""; else say "  fish_add_path $DIR"; fi
+    ;;
 esac
 
 say ""
