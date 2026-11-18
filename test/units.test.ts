@@ -121,3 +121,9 @@ describe("cli args", () => {
     expect(r.rest).toBe("migrating db");
   });
 });
+
+test("presets don't share state", () => {
+  const a = presetMaloca("solo-dev", human);
+  a["x-maloca"].agents.triage!.schedule = "0 0 * * *";
+  expect(presetMaloca("solo-dev", human)["x-maloca"].agents.triage!.schedule).toBe("*/5 * * * *");
+});

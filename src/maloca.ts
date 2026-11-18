@@ -193,7 +193,7 @@ export const STARTER_AGENTS: Record<string, AgentDecl> = {
 };
 
 export function presetMaloca(preset: Preset, human: Human, repos: string[] = [], name = "my-fleet"): Maloca {
-  const agents = { ...STARTER_AGENTS };
+  const agents = structuredClone(STARTER_AGENTS);
   const autonomy: Autonomy = {
     reply: "propose",
     open_pr: "auto",
